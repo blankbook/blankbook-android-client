@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">BlankBookAndroidClient</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="main_feed">Main Feed</string>
+    <string name="feeds">Feeds</string>
+    <string name="new_feed">new feed...</string>
+    <string name="groups">Groups</string>
+    <string name="new_group">new group...</string>
+</resources>
