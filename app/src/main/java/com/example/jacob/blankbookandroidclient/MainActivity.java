@@ -10,11 +10,14 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import com.example.jacob.blankbookandroidclient.adapters.MainDrawerRecyclerViewAdapter;
+import com.example.jacob.blankbookandroidclient.api.models.Post;
+import com.example.jacob.blankbookandroidclient.models.PostList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +69,29 @@ public class MainActivity extends AppCompatActivity {
         groups.add("group31");
         groups.add("group32");
         groups.add("group33");
+        List<String> groupNames = new ArrayList<>();
+        groupNames.add("group");
+        groupNames.add("mygroup");
+        PostList postList = new PostList();
+        postList.addListener(new PostList.UpdateListener() {
+            @Override
+            public void onUpdate(List<Post> updatedPosts) {
+                for (Post post : updatedPosts) {
+                    Log.d("MainActivity", "Post: " + post.Rank + ", " + post.GroupName + ", " + post.Title + ", " + post.Content);
+                }
+            }
+        });
+        postList.updatePostList(groupNames, 20L, 30L, null, "rank", null, null, null, new PostList.OnUpdate() {
+            @Override
+            public void onSuccess() {
+                Log.d("mainActivity", "updated successfully");
+            }
+
+            @Override
+            public void onFailure() {
+                Log.e("mainActivity", "update failure");
+            }
+        });
         // END TESTING ONLY
 
         drawer.setLayoutManager(new LinearLayoutManager(drawer.getContext()));
