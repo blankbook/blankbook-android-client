@@ -2,7 +2,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="@dimen/lg_margin"
+    android:layout_marginBottom="@dimen/lg_margin"
+    android:layout_marginStart="@dimen/lg_margin"
+    android:layout_marginEnd="@dimen/lg_margin"
     android:orientation="horizontal">
 
     <LinearLayout
@@ -14,17 +16,18 @@
         <Button
             android:id="@+id/upvote_btn"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="25dp" />
 
         <TextView
             android:id="@+id/score"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center" />
 
         <Button
             android:id="@+id/downvote_btn"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="25dp" />
     </LinearLayout>
 
     <LinearLayout
@@ -44,16 +47,16 @@
             android:id="@+id/title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:lines="2"
+            android:maxLines="2"
             android:ellipsize="end"
-            android:textSize="@dimen/lg_font"
+            android:textSize="@dimen/md_font"
             android:layout_marginBottom="@dimen/sm_margin"/>
 
         <TextView
             android:id="@+id/content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:lines="4"
+            android:maxLines="3"
             android:ellipsize="end"
             android:textSize="@dimen/md_font" />
     </LinearLayout>

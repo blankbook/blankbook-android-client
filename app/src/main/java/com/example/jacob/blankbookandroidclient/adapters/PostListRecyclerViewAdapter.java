@@ -11,14 +11,13 @@ import com.example.jacob.blankbookandroidclient.R;
 import com.example.jacob.blankbookandroidclient.api.models.Post;
 import com.example.jacob.blankbookandroidclient.managers.PostListManager;
 
-import java.util.List;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class PostListRecyclerViewAdapter extends RecyclerView.Adapter<PostListRecyclerViewAdapter.ViewHolder> {
     private PostListManager postListManager;
     private PostListManager.UpdateListener postListener;
+    private boolean showGroupName = true;
 
     public PostListRecyclerViewAdapter(PostListManager postListManager) {
         this.postListManager = postListManager;
@@ -39,6 +38,10 @@ public class PostListRecyclerViewAdapter extends RecyclerView.Adapter<PostListRe
         notifyDataSetChanged();
     }
 
+    public void setShowGroupName(boolean showGroupName) {
+        this.showGroupName = showGroupName;
+    }
+
     @Override
     public int getItemCount() {
         return postListManager.getPostList().size();
@@ -56,7 +59,7 @@ public class PostListRecyclerViewAdapter extends RecyclerView.Adapter<PostListRe
         holder.setPost(postListManager.getPostList().get(position));
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    class ViewHolder extends RecyclerView.ViewHolder {
         @BindView(R.id.group_name)
         TextView groupName;
         @BindView(R.id.title)
@@ -76,6 +79,11 @@ public class PostListRecyclerViewAdapter extends RecyclerView.Adapter<PostListRe
             title.setText(post.Title);
             content.setText(post.Content);
             score.setText(Integer.toString(post.Score));
+            if (showGroupName) {
+                groupName.setVisibility(View.VISIBLE);
+            } else {
+                groupName.setVisibility(View.GONE);
+            }
         }
     }
 }

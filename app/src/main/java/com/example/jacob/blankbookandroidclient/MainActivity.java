@@ -15,6 +15,8 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.FrameLayout;
 
 import com.example.jacob.blankbookandroidclient.adapters.MainDrawerRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.adapters.PostListRecyclerViewAdapter;
@@ -40,9 +42,10 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView drawer;
     @BindView(R.id.post_list)
     RecyclerView postList;
+    @BindView(R.id.loading_icon)
+    FrameLayout loadingIcon;
 
     private PostListManager postListManager;
-    private List<String> selectedGroups = new ArrayList<>();
     private ActionBar bar;
 
     @Override
@@ -55,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         bar = getSupportActionBar();
 
-
+        setupLoadingSpinner();
         setupPostList();
         setupDrawer();
     }
@@ -133,12 +136,26 @@ public class MainActivity extends AppCompatActivity {
         drawer.setAdapter(adapter);
     }
 
+    private void setupLoadingSpinner() {
+        postListManager.addListener(new PostListManager.UpdateListener() {
+            @Override
+            public void onUpdate() {
+                loadingIcon.setVisibility(View.GONE);
+            }
+        });
+    }
+
     private void setSelectedGroup(String group) {
+        loadingIcon.setVisibility(View.VISIBLE);
         setSelectedGroups(Collections.singletonList(group));
     }
 
     private void setSelectedGroups(List<String> groups) {
-        selectedGroups = groups;
+        if (groups.size() == 1) {
+            ((PostListRecyclerViewAdapter) postList.getAdapter()).setShowGroupName(false);
+        } else {
+            ((PostListRecyclerViewAdapter) postList.getAdapter()).setShowGroupName(true);
+        }
         postListManager.updatePostList(groups, null, null, null, "rank", null, null, null, null);
     }
 
