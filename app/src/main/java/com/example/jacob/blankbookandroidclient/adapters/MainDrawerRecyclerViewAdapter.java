@@ -11,7 +11,6 @@ import android.widget.TextView;
 import com.example.jacob.blankbookandroidclient.R;
 
 import java.util.List;
-import java.util.Stack;
 
 public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDrawerRecyclerViewAdapter.ViewHolder> {
     private final int NO_VIEW_HOLDER = -1;
@@ -258,7 +257,7 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
         private NewFeedViewHolder(View view) {
             super(view, NEW_FEED_VIEW_HOLDER);
             this.view = view;
-            ((TextView) view.findViewById(R.id.text)).setText(R.string.new_feed);
+            ((TextView) view.findViewById(R.id.text)).setText(R.string.add_feed);
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -325,7 +324,7 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
         private NewGroupViewHolder(View view) {
             super(view, NEW_GROUP_VIEW_HOLDER);
             this.view = view;
-            ((TextView) view.findViewById(R.id.text)).setText(R.string.new_group);
+            ((TextView) view.findViewById(R.id.text)).setText(R.string.add_group);
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {

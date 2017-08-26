@@ -3,6 +3,7 @@ package com.example.jacob.blankbookandroidclient;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -11,7 +12,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,11 +20,9 @@ import android.widget.FrameLayout;
 
 import com.example.jacob.blankbookandroidclient.adapters.MainDrawerRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.adapters.PostListRecyclerViewAdapter;
-import com.example.jacob.blankbookandroidclient.api.models.Post;
 import com.example.jacob.blankbookandroidclient.managers.PostListManager;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -44,9 +42,12 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView postList;
     @BindView(R.id.loading_icon)
     FrameLayout loadingIcon;
+    @BindView(R.id.post_list_refresh)
+    SwipeRefreshLayout postListRefresh;
 
     private PostListManager postListManager;
     private ActionBar bar;
+    private List<String> selectedGroups = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
         setupLoadingSpinner();
         setupPostList();
         setupDrawer();
+        setupPostListRefresh();
     }
 
     private void setupPostList() {
@@ -68,10 +70,9 @@ public class MainActivity extends AppCompatActivity {
         postList.setAdapter(new PostListRecyclerViewAdapter(postListManager));
 
         // TESTING
-        List<String> groupNames = new ArrayList<>();
-        groupNames.add("group");
-        groupNames.add("mygroup");
-        postListManager.updatePostList(groupNames, 20L, 30L, null, "rank", null, null, null, null);
+        selectedGroups.add("group");
+        selectedGroups.add("mygroup");
+        postListManager.updatePostList(selectedGroups, 20L, 30L, null, "rank", null, null, null, null);
         // END TESTING
     }
 
@@ -114,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onNewFeedSelect() {
-                        bar.setTitle(getString(R.string.new_feed));
+                        bar.setTitle(getString(R.string.add_feed));
                         closeDrawer();
                     }
 
@@ -127,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onNewGroupSelect() {
-                        bar.setTitle(getString(R.string.new_group));
+                        bar.setTitle(getString(R.string.add_group));
                         closeDrawer();
                     }
                 });
@@ -145,18 +146,46 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void setupPostListRefresh() {
+        postListRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshPostList(new PostListManager.OnUpdate() {
+                    @Override
+                    public void onSuccess() {
+                        postListRefresh.setRefreshing(false);
+                    }
+
+                    @Override
+                    public void onFailure() {
+                        postListRefresh.setRefreshing(false);
+                    }
+                });
+            }
+        });
+    }
+
     private void setSelectedGroup(String group) {
-        loadingIcon.setVisibility(View.VISIBLE);
         setSelectedGroups(Collections.singletonList(group));
     }
 
     private void setSelectedGroups(List<String> groups) {
-        if (groups.size() == 1) {
+        selectedGroups = groups;
+        loadingIcon.setVisibility(View.VISIBLE);
+        refreshPostList();
+    }
+
+    private void refreshPostList() {
+        refreshPostList(null);
+    }
+
+    private void refreshPostList(PostListManager.OnUpdate onUpdate) {
+        if (selectedGroups.size() == 1) {
             ((PostListRecyclerViewAdapter) postList.getAdapter()).setShowGroupName(false);
         } else {
             ((PostListRecyclerViewAdapter) postList.getAdapter()).setShowGroupName(true);
         }
-        postListManager.updatePostList(groups, null, null, null, "rank", null, null, null, null);
+        postListManager.updatePostList(selectedGroups, null, null, null, "rank", null, null, null, onUpdate);
     }
 
     private void closeDrawer() {
