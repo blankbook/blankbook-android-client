@@ -1,4 +1,4 @@
-package com.example.jacob.blankbookandroidclient.models;
+package com.example.jacob.blankbookandroidclient.managers;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -15,20 +15,20 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class PostList {
+public class PostListManager {
     private List<Post> posts = new ArrayList<>();
     private final BlankBookAPI api;
     private List<UpdateListener> listeners = new ArrayList<>();
 
-    public PostList() {
+    public PostListManager() {
         api = RetrofitClient.getInstance().getBlankBookAPI();
     }
 
-    public void updatePostList(@NonNull List<String> groupName, Long firstRank, Long lastRank,
+    public void updatePostList(@NonNull List<String> groupNames, Long firstRank, Long lastRank,
                        Long rankVersion, String ordering, Long firstTime, Long lastTime,
                        Integer maxCount, final OnUpdate onUpdate) {
 
-        api.getPosts(groupName, firstRank, lastRank, rankVersion, ordering, firstTime, lastTime, maxCount)
+        api.getPosts(groupNames, firstRank, lastRank, rankVersion, ordering, firstTime, lastTime, maxCount)
                 .enqueue(new Callback<RankedPosts>() {
             @Override
             public void onResponse(Call<RankedPosts> call, Response<RankedPosts> response) {
@@ -48,7 +48,7 @@ public class PostList {
 
             @Override
             public void onFailure(Call<RankedPosts> call, Throwable t) {
-                Log.e("PostList", t.getMessage());
+                Log.e("PostListManager", t.getMessage());
                 onUpdate.onFailure();
             }
         });
@@ -68,12 +68,12 @@ public class PostList {
 
     private void notifyListeners() {
         for (UpdateListener listener : listeners) {
-            listener.onUpdate(posts);
+            listener.onUpdate();
         }
     }
 
     public interface UpdateListener {
-        void onUpdate(List<Post> updatedPosts);
+        void onUpdate();
     }
 
     public interface OnUpdate {

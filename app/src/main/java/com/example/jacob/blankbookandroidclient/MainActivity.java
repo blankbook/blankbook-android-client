@@ -1,6 +1,7 @@
 package com.example.jacob.blankbookandroidclient;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.LinearLayoutManager;
@@ -16,21 +17,33 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.example.jacob.blankbookandroidclient.adapters.MainDrawerRecyclerViewAdapter;
+import com.example.jacob.blankbookandroidclient.adapters.PostListRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.api.models.Post;
-import com.example.jacob.blankbookandroidclient.models.PostList;
+import com.example.jacob.blankbookandroidclient.managers.PostListManager;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity {
+    @BindView(R.id.toolbar)
+    Toolbar toolbar;
+    @BindView(R.id.fab)
+    FloatingActionButton fab;
+    @BindView(R.id.root)
+    DrawerLayout root;
+    @BindView(R.id.left_drawer)
+    RecyclerView drawer;
+    @BindView(R.id.post_list)
+    RecyclerView postList;
 
-    @BindView(R.id.toolbar) Toolbar toolbar;
-    @BindView(R.id.fab) FloatingActionButton fab;
-    @BindView(R.id.root) DrawerLayout root;
-    @BindView(R.id.left_drawer) RecyclerView drawer;
+    private PostListManager postListManager;
+    private List<String> selectedGroups = new ArrayList<>();
+    private ActionBar bar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,11 +51,28 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        // Toolbar
+        postListManager = new PostListManager();
         setSupportActionBar(toolbar);
-        final ActionBar bar = getSupportActionBar();
+        bar = getSupportActionBar();
 
-        // Drawer
+
+        setupPostList();
+        setupDrawer();
+    }
+
+    private void setupPostList() {
+        postList.setLayoutManager(new LinearLayoutManager(postList.getContext()));
+        postList.setAdapter(new PostListRecyclerViewAdapter(postListManager));
+
+        // TESTING
+        List<String> groupNames = new ArrayList<>();
+        groupNames.add("group");
+        groupNames.add("mygroup");
+        postListManager.updatePostList(groupNames, 20L, 30L, null, "rank", null, null, null, null);
+        // END TESTING
+    }
+
+    private void setupDrawer() {
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, root, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         root.setDrawerListener(toggle);
@@ -58,79 +88,67 @@ public class MainActivity extends AppCompatActivity {
         feeds.add("feed02");
         feeds.add("feed03");
         feeds.add("feed11");
-        feeds.add("feed12");
-        feeds.add("feed13");
-        groups.add("group1");
-        groups.add("group2");
-        groups.add("group3");
-        groups.add("group21");
-        groups.add("group22");
-        groups.add("group23");
-        groups.add("group31");
-        groups.add("group32");
-        groups.add("group33");
-        List<String> groupNames = new ArrayList<>();
-        groupNames.add("group");
-        groupNames.add("mygroup");
-        PostList postList = new PostList();
-        postList.addListener(new PostList.UpdateListener() {
-            @Override
-            public void onUpdate(List<Post> updatedPosts) {
-                for (Post post : updatedPosts) {
-                    Log.d("MainActivity", "Post: " + post.Rank + ", " + post.GroupName + ", " + post.Title + ", " + post.Content);
-                }
-            }
-        });
-        postList.updatePostList(groupNames, 20L, 30L, null, "rank", null, null, null, new PostList.OnUpdate() {
-            @Override
-            public void onSuccess() {
-                Log.d("mainActivity", "updated successfully");
-            }
-
-            @Override
-            public void onFailure() {
-                Log.e("mainActivity", "update failure");
-            }
-        });
+        groups.add("mgroup");
+        groups.add("adfsasdf");
+        groups.add("group");
+        groups.add("mygroup");
         // END TESTING ONLY
 
         drawer.setLayoutManager(new LinearLayoutManager(drawer.getContext()));
         MainDrawerRecyclerViewAdapter adapter = new MainDrawerRecyclerViewAdapter(feeds, groups,
-            new MainDrawerRecyclerViewAdapter.OnSelect() {
+                new MainDrawerRecyclerViewAdapter.OnSelect() {
+                    @Override
+                    public void onMainFeedSelect() {
+                        bar.setTitle(getString(R.string.main_feed));
+                        closeDrawer();
+                    }
 
-                @Override
-                public void onMainFeedSelect() {
-                    bar.setTitle(getString(R.string.main_feed));
-                    root.closeDrawer(Gravity.START);
-                }
+                    @Override
+                    public void onFeedSelect(String name) {
+                        bar.setTitle(name);
+                        closeDrawer();
+                    }
 
-                @Override
-                public void onFeedSelect(String name) {
-                    bar.setTitle(name);
-                    root.closeDrawer(Gravity.START);
-                }
+                    @Override
+                    public void onNewFeedSelect() {
+                        bar.setTitle(getString(R.string.new_feed));
+                        closeDrawer();
+                    }
 
-                @Override
-                public void onNewFeedSelect() {
-                    bar.setTitle(getString(R.string.new_feed));
-                    root.closeDrawer(Gravity.START);
-                }
+                    @Override
+                    public void onGroupSelect(String name) {
+                        setSelectedGroup(name);
+                        bar.setTitle(name);
+                        closeDrawer();
+                    }
 
-                @Override
-                public void onGroupSelect(String name) {
-                    bar.setTitle(name);
-                    root.closeDrawer(Gravity.START);
-                }
-
-                @Override
-                public void onNewGroupSelect() {
-                    bar.setTitle(getString(R.string.new_group));
-                    root.closeDrawer(Gravity.START);
-                }
-            });
+                    @Override
+                    public void onNewGroupSelect() {
+                        bar.setTitle(getString(R.string.new_group));
+                        closeDrawer();
+                    }
+                });
         adapter.highlightMainFeed();
         bar.setTitle(getString(R.string.main_feed));
         drawer.setAdapter(adapter);
+    }
+
+    private void setSelectedGroup(String group) {
+        setSelectedGroups(Collections.singletonList(group));
+    }
+
+    private void setSelectedGroups(List<String> groups) {
+        selectedGroups = groups;
+        postListManager.updatePostList(groups, null, null, null, "rank", null, null, null, null);
+    }
+
+    private void closeDrawer() {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                root.closeDrawer(Gravity.START);
+            }
+        }, 250);
     }
 
     @Override
@@ -147,7 +165,6 @@ public class MainActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
-
 
 
     @Override

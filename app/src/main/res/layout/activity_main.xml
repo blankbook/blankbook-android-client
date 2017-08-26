@@ -13,6 +13,7 @@
         android:layout_height="match_parent">
 
         <android.support.design.widget.AppBarLayout
+            android:id="@+id/app_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:theme="@style/AppTheme.AppBarOverlay">
@@ -26,13 +27,22 @@
 
         </android.support.design.widget.AppBarLayout>
 
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/post_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@id/app_bar" />
+
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
             android:layout_alignParentBottom="true"
             android:layout_alignParentEnd="true"
+            android:layout_gravity="bottom|end"
             android:layout_margin="@dimen/fab_margin"
             app:srcCompat="@drawable/ic_comment_white_24dp" />
 
@@ -42,13 +52,13 @@
         android:id="@+id/left_drawer"
         android:layout_width="250dp"
         android:layout_height="match_parent"
-        android:paddingTop="30dp"
-        android:paddingBottom="30dp"
-        android:clipToPadding="false"
         android:layout_gravity="start"
+        android:background="@color/colorPrimaryDark"
         android:choiceMode="singleChoice"
+        android:clipToPadding="false"
         android:divider="@android:color/transparent"
         android:dividerHeight="0dp"
-        android:background="@color/colorPrimaryDark"/>
+        android:paddingBottom="30dp"
+        android:paddingTop="30dp" />
 
 </android.support.v4.widget.DrawerLayout>

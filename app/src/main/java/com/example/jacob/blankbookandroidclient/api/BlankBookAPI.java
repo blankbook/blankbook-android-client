@@ -16,7 +16,7 @@ import retrofit2.http.Query;
 public interface BlankBookAPI {
     @GET("content/read/posts")
     Call<RankedPosts> getPosts(
-        @Query("groupname") List<String> groupName,
+        @Query("groupname") List<String> groupNames,
         @Query("firstrank") Long firstRank,
         @Query("lastrank") Long lastRank,
         @Query("rankversion") Long rankVersion,
