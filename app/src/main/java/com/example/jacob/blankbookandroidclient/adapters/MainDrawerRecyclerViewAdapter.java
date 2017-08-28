@@ -55,25 +55,25 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
         updateHighlight();
     }
 
-    public void highlightFeed(String feed) {
+    private void highlightFeed(String feed) {
         clearHighlight();
         this.highlightedFeed = feed;
         updateHighlight();
     }
 
-    public void highlightNewFeed() {
+    private void highlightNewFeed() {
         clearHighlight();
         this.newFeedHighlighted = true;
         updateHighlight();
     }
 
-    public void highlightGroup(String group) {
+    private void highlightGroup(String group) {
         clearHighlight();
         this.highlightedGroup = group;
         updateHighlight();
     }
 
-    public void highlightNewGroup() {
+    private void highlightNewGroup() {
         clearHighlight();
         this.newGroupHighlighted = true;
         updateHighlight();
@@ -345,14 +345,14 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
     }
 
     private void highlightMenuItem(View view) {
-        view.setBackgroundColor(ContextCompat.getColor(view.getContext(), R.color.colorPrimary));
+        view.setBackgroundColor(ContextCompat.getColor(view.getContext(), R.color.primary));
     }
 
     private void removeMenuItemBackground(View view) {
         view.setBackgroundColor(Color.TRANSPARENT);
     }
 
-    private void clearHighlight() {
+    public void clearHighlight() {
         if (mainFeedHighlighted) {
             mainFeedHighlighted = false;
             updateMainFeedHighlight();

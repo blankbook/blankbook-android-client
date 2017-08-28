@@ -1,5 +1,8 @@
 package com.example.jacob.blankbookandroidclient;
 
+import android.app.SearchManager;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
@@ -11,6 +14,8 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Gravity;
 import android.view.Menu;
@@ -20,6 +25,7 @@ import android.widget.FrameLayout;
 
 import com.example.jacob.blankbookandroidclient.adapters.MainDrawerRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.adapters.PostListRecyclerViewAdapter;
+import com.example.jacob.blankbookandroidclient.api.models.Group;
 import com.example.jacob.blankbookandroidclient.managers.PostListManager;
 
 import java.util.ArrayList;
@@ -46,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     SwipeRefreshLayout postListRefresh;
 
     private PostListManager postListManager;
+    private MainDrawerRecyclerViewAdapter postListAdapter;
     private ActionBar bar;
     private List<String> selectedGroups = new ArrayList<>();
 
@@ -63,6 +70,36 @@ public class MainActivity extends AppCompatActivity {
         setupPostList();
         setupDrawer();
         setupPostListRefresh();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (root.isDrawerOpen(GravityCompat.START)) {
+            root.closeDrawer(GravityCompat.START);
+        } else {
+            super.onBackPressed();
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_settings) {
+            return true;
+        } else if (id == R.id.search) {
+            GroupSearchDialogFragment dialogFragment = new GroupSearchDialogFragment();
+            dialogFragment.show(getFragmentManager(), "tag");
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     private void setupPostList() {
@@ -99,7 +136,7 @@ public class MainActivity extends AppCompatActivity {
         // END TESTING ONLY
 
         drawer.setLayoutManager(new LinearLayoutManager(drawer.getContext()));
-        MainDrawerRecyclerViewAdapter adapter = new MainDrawerRecyclerViewAdapter(feeds, groups,
+        postListAdapter = new MainDrawerRecyclerViewAdapter(feeds, groups,
                 new MainDrawerRecyclerViewAdapter.OnSelect() {
                     @Override
                     public void onMainFeedSelect() {
@@ -128,13 +165,12 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onNewGroupSelect() {
-                        bar.setTitle(getString(R.string.add_group));
                         closeDrawer();
                     }
                 });
-        adapter.highlightMainFeed();
+        postListAdapter.highlightMainFeed();
         bar.setTitle(getString(R.string.main_feed));
-        drawer.setAdapter(adapter);
+        drawer.setAdapter(postListAdapter);
     }
 
     private void setupLoadingSpinner() {
@@ -165,6 +201,13 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    public void onGroupSearchDialogResult(Group group) {
+        setSelectedGroup(group.Name);
+        bar.setTitle(group.Name);
+        postListAdapter.clearHighlight();
+        // TODO: Change the 'comment' button into an 'add' button to add the group to the local list
+    }
+
     private void setSelectedGroup(String group) {
         setSelectedGroups(Collections.singletonList(group));
     }
@@ -192,35 +235,10 @@ public class MainActivity extends AppCompatActivity {
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                root.closeDrawer(Gravity.START);
+                if (root != null) {
+                    root.closeDrawer(Gravity.START);
+                }
             }
         }, 250);
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (root.isDrawerOpen(GravityCompat.START)) {
-            root.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 }

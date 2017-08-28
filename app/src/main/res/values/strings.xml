@@ -10,4 +10,12 @@
     <string name="add_feed">add feed&#8230;</string>
     <string name="groups">Groups</string>
     <string name="add_group">add group&#8230;</string>
+    <string name="preferences_file_key">ca.blankbook.blankbook.preferences</string>
+    <string name="preferences_groups_key">groups</string>
+    <string name="preferences_feeds_key">feeds</string>
+    <string name="preferences_feed_key_prefix">feed:</string>
+    <string name="title_activity_group_search">GroupSearchActivity</string>
+    <string name="search_title">Search Groups</string>
+    <string name="search_hint">Group&#8230;</string>
+    <string name="no_results_found">No Results Found</string>
 </resources>

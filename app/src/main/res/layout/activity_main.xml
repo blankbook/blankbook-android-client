@@ -16,6 +16,7 @@
             android:id="@+id/app_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:textColor="@color/lightGrey"
             android:theme="@style/AppTheme.AppBarOverlay">
 
             <android.support.v7.widget.Toolbar
@@ -40,6 +41,7 @@
                 android:id="@+id/post_list"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:background="@color/lightGrey"
                 android:clipToPadding="false"
                 android:paddingTop="@dimen/lg_margin" />
 
@@ -53,7 +55,7 @@
             android:layout_alignParentEnd="true"
             android:layout_gravity="bottom|end"
             android:layout_margin="@dimen/fab_margin"
-            app:srcCompat="@drawable/ic_comment_white_24dp" />
+            app:srcCompat="@drawable/ic_comment" />
 
         <FrameLayout
             android:id="@+id/loading_icon"
@@ -63,7 +65,7 @@
             android:layout_alignParentEnd="true"
             android:layout_alignParentStart="true"
             android:layout_below="@id/app_bar"
-            android:background="#ffffff"
+            android:background="@color/lightGrey"
             android:visibility="gone">
 
             <android.support.v4.widget.ContentLoadingProgressBar
@@ -80,12 +82,13 @@
         android:layout_width="250dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="@color/colorPrimaryDark"
+        android:background="@color/primaryDark"
         android:choiceMode="singleChoice"
         android:clipToPadding="false"
         android:divider="@android:color/transparent"
         android:dividerHeight="0dp"
         android:paddingBottom="30dp"
-        android:paddingTop="30dp" />
+        android:paddingTop="30dp"
+        android:textColor="@color/lightGrey" />
 
 </android.support.v4.widget.DrawerLayout>

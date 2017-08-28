@@ -1,6 +1,7 @@
 package com.example.jacob.blankbookandroidclient.api;
 
 import com.example.jacob.blankbookandroidclient.api.models.Comment;
+import com.example.jacob.blankbookandroidclient.api.models.Group;
 import com.example.jacob.blankbookandroidclient.api.models.Post;
 import com.example.jacob.blankbookandroidclient.api.models.RankedPosts;
 
@@ -57,9 +58,24 @@ public interface BlankBookAPI {
 
     @PUT("content/write/post/comment/vote")
     Call<Void> putPostCommentVote(
-            @Query("userid") Long userId,
-            @Query("postid") Long postId,
-            @Query("commentid") Long commentId,
-            @Query("vote") Integer vote
+        @Query("userid") Long userId,
+        @Query("postid") Long postId,
+        @Query("commentid") Long commentId,
+        @Query("vote") Integer vote
+    );
+
+    @GET("groups/read/search")
+    Call<List<Group>> getGroupSearch(
+        @Query("term") String term
+    );
+
+    @GET("groups/read/group")
+    Call<Group> getGroup(
+        @Query("name") String name
+    );
+
+    @POST("groups/write/group")
+    Call<Void> postGroup(
+        @Body Group group
     );
 }
