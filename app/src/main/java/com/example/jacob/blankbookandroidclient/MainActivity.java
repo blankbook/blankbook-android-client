@@ -1,8 +1,5 @@
 package com.example.jacob.blankbookandroidclient;
 
-import android.app.SearchManager;
-import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
@@ -14,8 +11,8 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.widget.SearchView;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.support.v7.widget.Toolbar;
 import android.view.Gravity;
 import android.view.Menu;
@@ -40,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     Toolbar toolbar;
     @BindView(R.id.fab)
     FloatingActionButton fab;
-    @BindView(R.id.root)
+    @BindView(R.id.drawer)
     DrawerLayout root;
     @BindView(R.id.left_drawer)
     RecyclerView drawer;
@@ -70,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         setupPostList();
         setupDrawer();
         setupPostListRefresh();
+        setupAnimations();
     }
 
     @Override
@@ -116,9 +114,8 @@ public class MainActivity extends AppCompatActivity {
     private void setupDrawer() {
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, root, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        root.setDrawerListener(toggle);
         toggle.syncState();
-
+        
         // TESTING ONLY
         List<String> feeds = new ArrayList<>();
         List<String> groups = new ArrayList<>();
@@ -140,26 +137,26 @@ public class MainActivity extends AppCompatActivity {
                 new MainDrawerRecyclerViewAdapter.OnSelect() {
                     @Override
                     public void onMainFeedSelect() {
-                        bar.setTitle(getString(R.string.main_feed));
+                        animateTitleChange(getString(R.string.main_feed));
                         closeDrawer();
                     }
 
                     @Override
                     public void onFeedSelect(String name) {
-                        bar.setTitle(name);
+                        animateTitleChange(name);
                         closeDrawer();
                     }
 
                     @Override
                     public void onNewFeedSelect() {
-                        bar.setTitle(getString(R.string.add_feed));
+                        animateTitleChange(getString(R.string.add_feed));
                         closeDrawer();
                     }
 
                     @Override
                     public void onGroupSelect(String name) {
                         setSelectedGroup(name);
-                        bar.setTitle(name);
+                        animateTitleChange(name);
                         closeDrawer();
                     }
 
@@ -201,11 +198,24 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void setupAnimations() {
+        postList.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if (dy > 0) {
+                    fab.hide();
+                } else {
+                    fab.show();
+                }
+            }
+        });
+    }
+
     public void onGroupSearchDialogResult(Group group) {
         setSelectedGroup(group.Name);
-        bar.setTitle(group.Name);
+        animateTitleChange(group.Name);
         postListAdapter.clearHighlight();
-        // TODO: Change the 'comment' button into an 'add' button to add the group to the local list
     }
 
     private void setSelectedGroup(String group) {
@@ -240,5 +250,33 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }, 250);
+    }
+
+    private void animateTitleChange(final String newTitle) {
+        final View title = toolbar.getChildAt(0);
+
+        AlphaAnimation fadeOut = new AlphaAnimation(1f, 0f);
+        fadeOut.setDuration(100);
+        fadeOut.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                bar.setTitle(newTitle);
+
+                AlphaAnimation fadeIn = new AlphaAnimation(0f, 1f);
+                fadeIn.setDuration(100);
+                title.startAnimation(fadeIn);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        title.startAnimation(fadeOut);
     }
 }
