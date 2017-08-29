@@ -158,13 +158,6 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onNewFeedSelect() {
-                        animateTitleChange(getString(R.string.add_feed));
-                        closeDrawer();
-                        setFabToComment();
-                    }
-
-                    @Override
                     public void onGroupSelect(String name) {
                         setSelectedGroup(name);
                         animateTitleChange(name);

@@ -3,10 +3,12 @@ package com.example.jacob.blankbookandroidclient.adapters;
 import android.graphics.Color;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.jacob.blankbookandroidclient.R;
 import com.example.jacob.blankbookandroidclient.managers.LocalGroupsManger;
@@ -18,16 +20,14 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
     private final int MAIN_FEED_VIEW_HOLDER = 0;
     private final int FEEDS_HEADER_VIEW_HOLDER = 1;
     private final int FEED_VIEW_HOLDER = 2;
-    private final int NEW_FEED_VIEW_HOLDER = 3;
-    private final int GROUPS_HEADER_VIEW_HOLDER = 4;
-    private final int GROUP_VIEW_HOLDER = 5;
+    private final int GROUPS_HEADER_VIEW_HOLDER = 3;
+    private final int GROUP_VIEW_HOLDER = 4;
 
     private final OnSelect onSelect;
     private final LocalGroupsManger localGroupsManger;
 
     private boolean mainFeedHighlighted;
     private String highlightedFeed;
-    private boolean newFeedHighlighted;
     private String highlightedGroup;
 
     public MainDrawerRecyclerViewAdapter(LocalGroupsManger localGroupsManager, OnSelect onSelect) {
@@ -48,12 +48,6 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
         updateHighlight();
     }
 
-    private void highlightNewFeed() {
-        clearHighlight();
-        this.newFeedHighlighted = true;
-        updateHighlight();
-    }
-
     private void highlightGroup(String group) {
         clearHighlight();
         this.highlightedGroup = group;
@@ -62,8 +56,8 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
 
     @Override
     public int getItemCount() {
-        // main feed + groups header + new group + feeds header
-        final int numExtraEntries = 4;
+        // main feed + groups header + feeds header
+        final int numExtraEntries = 3;
         return localGroupsManger.getGroups().size() + localGroupsManger.getFeeds().size() + numExtraEntries;
     }
 
@@ -81,10 +75,6 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
         if (position < 0) {
             return FEED_VIEW_HOLDER;
         }
-        if (position == 0) {
-            return NEW_FEED_VIEW_HOLDER;
-        }
-        position -= 1; // pop off 'new feed' from list
         if (position == 0) {
             return GROUPS_HEADER_VIEW_HOLDER;
         }
@@ -106,19 +96,15 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
                 return new MainFeedViewHolder(view);
             case FEEDS_HEADER_VIEW_HOLDER:
                 view = LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.main_drawer_list_header, parent, false);
+                        .inflate(R.layout.main_drawer_list_add_header, parent, false);
                 return new FeedsHeaderViewHolder(view);
-            case NEW_FEED_VIEW_HOLDER:
-                view = LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.main_drawer_list_item, parent, false);
-                return new NewFeedViewHolder(view);
             case FEED_VIEW_HOLDER:
                 view = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.main_drawer_list_item, parent, false);
                 return new FeedViewHolder(view);
             case GROUPS_HEADER_VIEW_HOLDER:
                 view = LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.main_drawer_list_header, parent, false);
+                        .inflate(R.layout.main_drawer_list_add_header, parent, false);
                 return new GroupsHeaderViewHolder(view);
             case GROUP_VIEW_HOLDER:
                 view = LayoutInflater.from(parent.getContext())
@@ -140,7 +126,7 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
             }
             case GROUP_VIEW_HOLDER: {
                 // main feed + groups header + feed header + feeds
-                final int offset = 4 + localGroupsManger.getFeeds().size();
+                final int offset = 3 + localGroupsManger.getFeeds().size();
                 final int i = position - offset;
                 ((GroupViewHolder) holder).setGroup(localGroupsManger.getGroups().get(i));
             }
@@ -188,6 +174,12 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
         private FeedsHeaderViewHolder(View view) {
             super(view, FEEDS_HEADER_VIEW_HOLDER);
             ((TextView) view.findViewById(R.id.text)).setText(R.string.feeds);
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Toast.makeText(view.getContext(), "Add feed", Toast.LENGTH_LONG).show();
+                }
+            });
         }
     }
 
@@ -225,36 +217,16 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
         }
     }
 
-    private class NewFeedViewHolder extends ViewHolder {
-        private final View view;
-
-        private NewFeedViewHolder(View view) {
-            super(view, NEW_FEED_VIEW_HOLDER);
-            this.view = view;
-            ((TextView) view.findViewById(R.id.text)).setText(R.string.add_feed);
-            view.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    onSelect.onNewFeedSelect();
-                    highlightNewFeed();
-                }
-            });
-        }
-
-        @Override
-        void updateHighlight() {
-            if (newFeedHighlighted) {
-                highlightMenuItem(view);
-            } else {
-                removeMenuItemBackground(view);
-            }
-        }
-    }
-
     private class GroupsHeaderViewHolder extends ViewHolder {
         private GroupsHeaderViewHolder(View view) {
             super(view, GROUPS_HEADER_VIEW_HOLDER);
             ((TextView) view.findViewById(R.id.text)).setText(R.string.groups);
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Toast.makeText(view.getContext(), "Add group", Toast.LENGTH_LONG).show();
+                }
+            });
         }
     }
 
@@ -308,9 +280,6 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
             int i = findFeedIndex(highlightedFeed);
             highlightedFeed = null;
             updateFeedHighlight(i);
-        } else if (newFeedHighlighted) {
-            newFeedHighlighted = false;
-            updateNewFeedHighlight();
         } else if (highlightedGroup != null) {
             int i = findGroupIndex(highlightedGroup);
             highlightedGroup = null;
@@ -323,8 +292,6 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
             updateMainFeedHighlight();
         } else if (highlightedFeed != null) {
             updateFeedHighlight(findFeedIndex(highlightedFeed));
-        } else if (newFeedHighlighted) {
-            updateNewFeedHighlight();
         } else if (highlightedGroup != null) {
             updateGroupHighlight(findGroupIndex(highlightedGroup));
         }
@@ -358,12 +325,8 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
         notifyItemChanged(2 + feedIndex);
     }
 
-    private void updateNewFeedHighlight() {
-        notifyItemChanged(2 + localGroupsManger.getFeeds().size());
-    }
-
     private void updateGroupHighlight(int groupIndex) {
-        notifyItemChanged(3 + localGroupsManger.getGroups().size() + groupIndex);
+        notifyItemChanged(3 + localGroupsManger.getFeeds().size() + groupIndex);
     }
 
     public interface OnSelect {
@@ -372,7 +335,5 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
         void onGroupSelect(String name);
 
         void onFeedSelect(String name);
-
-        void onNewFeedSelect();
     }
 }
