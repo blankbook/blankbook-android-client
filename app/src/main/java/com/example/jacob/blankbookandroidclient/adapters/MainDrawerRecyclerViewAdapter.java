@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.example.jacob.blankbookandroidclient.R;
+import com.example.jacob.blankbookandroidclient.managers.LocalGroupsManger;
 
 import java.util.List;
 
@@ -20,33 +21,19 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
     private final int NEW_FEED_VIEW_HOLDER = 3;
     private final int GROUPS_HEADER_VIEW_HOLDER = 4;
     private final int GROUP_VIEW_HOLDER = 5;
-    private final int NEW_GROUP_VIEW_HOLDER = 6;
 
     private final OnSelect onSelect;
+    private final LocalGroupsManger localGroupsManger;
 
-    private List<String> feeds;
-    private List<String> groups;
     private boolean mainFeedHighlighted;
     private String highlightedFeed;
     private boolean newFeedHighlighted;
     private String highlightedGroup;
-    private boolean newGroupHighlighted;
 
-    public MainDrawerRecyclerViewAdapter(List<String> feeds, List<String> groups, OnSelect onSelect) {
+    public MainDrawerRecyclerViewAdapter(LocalGroupsManger localGroupsManager, OnSelect onSelect) {
         this.onSelect = onSelect;
-        this.feeds = feeds;
-        this.groups = groups;
+        this.localGroupsManger = localGroupsManager;
         clearHighlight();
-    }
-
-    public void setGroups(List<String> groups) {
-        this.groups = groups;
-        this.notifyDataSetChanged();
-    }
-
-    public void setFeeds(List<String> feeds) {
-        this.feeds = feeds;
-        this.notifyDataSetChanged();
     }
 
     public void highlightMainFeed() {
@@ -73,17 +60,11 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
         updateHighlight();
     }
 
-    private void highlightNewGroup() {
-        clearHighlight();
-        this.newGroupHighlighted = true;
-        updateHighlight();
-    }
-
     @Override
     public int getItemCount() {
-        // main feed + groups header + new group + feeds header + new feed
-        final int numExtraEntries = 5;
-        return groups.size() + feeds.size() + numExtraEntries;
+        // main feed + groups header + new group + feeds header
+        final int numExtraEntries = 4;
+        return localGroupsManger.getGroups().size() + localGroupsManger.getFeeds().size() + numExtraEntries;
     }
 
     @Override
@@ -96,7 +77,7 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
             return FEEDS_HEADER_VIEW_HOLDER;
         }
         position -= 1; // pop off 'feeds header' from list
-        position -= feeds.size(); // pop off all feed list items from the list
+        position -= localGroupsManger.getFeeds().size(); // pop off all feed list items from the list
         if (position < 0) {
             return FEED_VIEW_HOLDER;
         }
@@ -108,12 +89,9 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
             return GROUPS_HEADER_VIEW_HOLDER;
         }
         position -= 1; // pop off 'groups header' from list
-        position -= groups.size(); // pop off all group list items from list
+        position -= localGroupsManger.getGroups().size(); // pop off all group list items from list
         if (position < 0) {
             return GROUP_VIEW_HOLDER;
-        }
-        if (position == 0) {
-            return NEW_GROUP_VIEW_HOLDER;
         }
         return NO_VIEW_HOLDER;
     }
@@ -146,10 +124,6 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
                 view = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.main_drawer_list_item, parent, false);
                 return new GroupViewHolder(view);
-            case NEW_GROUP_VIEW_HOLDER:
-                view = LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.main_drawer_list_item, parent, false);
-                return new NewGroupViewHolder(view);
         }
         return null;
     }
@@ -161,14 +135,14 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
                 // main feed + groups header
                 final int offset = 2;
                 final int i = position - offset;
-                ((FeedViewHolder) holder).setFeed(this.feeds.get(i));
+                ((FeedViewHolder) holder).setFeed(localGroupsManger.getFeeds().get(i));
                 break;
             }
             case GROUP_VIEW_HOLDER: {
-                // main feed + groups header + new group + feed header + feeds
-                final int offset = 4 + this.feeds.size();
+                // main feed + groups header + feed header + feeds
+                final int offset = 4 + localGroupsManger.getFeeds().size();
                 final int i = position - offset;
-                ((GroupViewHolder) holder).setGroup(this.groups.get(i));
+                ((GroupViewHolder) holder).setGroup(localGroupsManger.getGroups().get(i));
             }
         }
         holder.updateHighlight();
@@ -318,32 +292,6 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
         }
     }
 
-    private class NewGroupViewHolder extends ViewHolder {
-        private final View view;
-
-        private NewGroupViewHolder(View view) {
-            super(view, NEW_GROUP_VIEW_HOLDER);
-            this.view = view;
-            ((TextView) view.findViewById(R.id.text)).setText(R.string.add_group);
-            view.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    onSelect.onNewGroupSelect();
-                    highlightNewGroup();
-                }
-            });
-        }
-
-        @Override
-        void updateHighlight() {
-            if (newGroupHighlighted) {
-                highlightMenuItem(view);
-            } else {
-                removeMenuItemBackground(view);
-            }
-        }
-    }
-
     private void highlightMenuItem(View view) {
         view.setBackgroundColor(ContextCompat.getColor(view.getContext(), R.color.primary));
     }
@@ -367,9 +315,6 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
             int i = findGroupIndex(highlightedGroup);
             highlightedGroup = null;
             updateGroupHighlight(i);
-        } else if (newGroupHighlighted) {
-            newGroupHighlighted = false;
-            updateNewGroupHighlight();
         }
     }
 
@@ -382,12 +327,11 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
             updateNewFeedHighlight();
         } else if (highlightedGroup != null) {
             updateGroupHighlight(findGroupIndex(highlightedGroup));
-        } else if (newGroupHighlighted) {
-            updateNewGroupHighlight();
         }
     }
 
     private int findFeedIndex(String feed) {
+        final List<String> feeds = localGroupsManger.getFeeds();
         for (int i = 0; i < feeds.size(); ++i) {
             if (feed.equals(feeds.get(i))) {
                 return i;
@@ -397,6 +341,7 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
     }
 
     private int findGroupIndex(String group) {
+        final List<String> groups = localGroupsManger.getGroups();
         for (int i = 0; i < groups.size(); ++i) {
             if (group.equals(groups.get(i))) {
                 return i;
@@ -414,15 +359,11 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
     }
 
     private void updateNewFeedHighlight() {
-        notifyItemChanged(2 + feeds.size());
+        notifyItemChanged(2 + localGroupsManger.getFeeds().size());
     }
 
     private void updateGroupHighlight(int groupIndex) {
-        notifyItemChanged(4 + feeds.size() + groupIndex);
-    }
-
-    private void updateNewGroupHighlight() {
-        notifyItemChanged(4 + feeds.size() + groups.size());
+        notifyItemChanged(3 + localGroupsManger.getGroups().size() + groupIndex);
     }
 
     public interface OnSelect {
@@ -431,8 +372,6 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
         void onGroupSelect(String name);
 
         void onFeedSelect(String name);
-
-        void onNewGroupSelect();
 
         void onNewFeedSelect();
     }

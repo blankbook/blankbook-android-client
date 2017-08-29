@@ -3,6 +3,7 @@ package com.example.jacob.blankbookandroidclient;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.LinearLayoutManager;
@@ -19,10 +20,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import com.example.jacob.blankbookandroidclient.adapters.MainDrawerRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.adapters.PostListRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.api.models.Group;
+import com.example.jacob.blankbookandroidclient.managers.LocalGroupsManger;
 import com.example.jacob.blankbookandroidclient.managers.PostListManager;
 
 import java.util.ArrayList;
@@ -37,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
     Toolbar toolbar;
     @BindView(R.id.fab)
     FloatingActionButton fab;
-    @BindView(R.id.drawer)
+    @BindView(R.id.root)
     DrawerLayout root;
     @BindView(R.id.left_drawer)
     RecyclerView drawer;
@@ -49,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     SwipeRefreshLayout postListRefresh;
 
     private PostListManager postListManager;
+    private LocalGroupsManger localGroupsManager;
     private MainDrawerRecyclerViewAdapter postListAdapter;
     private ActionBar bar;
     private List<String> selectedGroups = new ArrayList<>();
@@ -63,11 +67,15 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         bar = getSupportActionBar();
 
+        localGroupsManager = LocalGroupsManger.getInstance();
+        localGroupsManager.init(this);
+
         setupLoadingSpinner();
         setupPostList();
         setupDrawer();
         setupPostListRefresh();
         setupAnimations();
+        setFabToComment();
     }
 
     @Override
@@ -115,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, root, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         toggle.syncState();
-        
+
         // TESTING ONLY
         List<String> feeds = new ArrayList<>();
         List<String> groups = new ArrayList<>();
@@ -133,24 +141,27 @@ public class MainActivity extends AppCompatActivity {
         // END TESTING ONLY
 
         drawer.setLayoutManager(new LinearLayoutManager(drawer.getContext()));
-        postListAdapter = new MainDrawerRecyclerViewAdapter(feeds, groups,
+        postListAdapter = new MainDrawerRecyclerViewAdapter(localGroupsManager,
                 new MainDrawerRecyclerViewAdapter.OnSelect() {
                     @Override
                     public void onMainFeedSelect() {
                         animateTitleChange(getString(R.string.main_feed));
                         closeDrawer();
+                        setFabToComment();
                     }
 
                     @Override
                     public void onFeedSelect(String name) {
                         animateTitleChange(name);
                         closeDrawer();
+                        setFabToComment();
                     }
 
                     @Override
                     public void onNewFeedSelect() {
                         animateTitleChange(getString(R.string.add_feed));
                         closeDrawer();
+                        setFabToComment();
                     }
 
                     @Override
@@ -158,11 +169,7 @@ public class MainActivity extends AppCompatActivity {
                         setSelectedGroup(name);
                         animateTitleChange(name);
                         closeDrawer();
-                    }
-
-                    @Override
-                    public void onNewGroupSelect() {
-                        closeDrawer();
+                        setFabToComment();
                     }
                 });
         postListAdapter.highlightMainFeed();
@@ -216,6 +223,7 @@ public class MainActivity extends AppCompatActivity {
         setSelectedGroup(group.Name);
         animateTitleChange(group.Name);
         postListAdapter.clearHighlight();
+        setFabToAddGroup(group);
     }
 
     private void setSelectedGroup(String group) {
@@ -278,5 +286,32 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         title.startAnimation(fadeOut);
+    }
+
+    private void setFabToComment() {
+        fab.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_comment));
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Toast.makeText(MainActivity.this, "Add a comment", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void setFabToAddGroup(final Group targetGroup) {
+        fab.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_add));
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                addGroupAndGo(targetGroup);
+            }
+        });
+    }
+
+    private void addGroupAndGo(final Group group) {
+        localGroupsManager.addGroup(group.Name);
+        drawer.getAdapter().notifyDataSetChanged();
+        setSelectedGroup(group.Name);
+        setFabToComment();
     }
 }

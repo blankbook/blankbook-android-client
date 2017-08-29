@@ -5,22 +5,24 @@ import android.content.SharedPreferences;
 
 import com.example.jacob.blankbookandroidclient.R;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 public class LocalGroupsManger {
-    private LocalGroupsManger instance;
+    private static LocalGroupsManger instance;
     private SharedPreferences sharedPrefs;
     private String groupsKey;
     private String feedsKey;
     private String feedKeyPrefix;
-    private Set<String> groups;
-    private Set<String> feeds;
+    private List<String> groups;
+    private List<String> feeds;
     private HashMap<String, Set<String>> feedsGroups = new HashMap<>();
 
-    public LocalGroupsManger getInstance() {
+    public static LocalGroupsManger getInstance() {
         if (instance == null) {
             instance = new LocalGroupsManger();
         }
@@ -35,18 +37,18 @@ public class LocalGroupsManger {
 
         sharedPrefs = context.getSharedPreferences(fileKey, Context.MODE_PRIVATE);
 
-        groups = sharedPrefs.getStringSet(groupsKey, new HashSet<String>());
-        feeds = sharedPrefs.getStringSet(feedsKey, new HashSet<String>());
+        groups = new ArrayList<>(sharedPrefs.getStringSet(groupsKey, new HashSet<String>()));
+        feeds = new ArrayList<>(sharedPrefs.getStringSet(feedsKey, new HashSet<String>()));
         for (String feed : feeds) {
             feedsGroups.put(feed, sharedPrefs.getStringSet(feedKeyPrefix + feed, new HashSet<String>()));
         }
     }
 
-    public Set<String> getGroups() {
+    public List<String> getGroups() {
         return groups;
     }
 
-    public Set<String> getFeeds() {
+    public List<String> getFeeds() {
         return feeds;
     }
 
@@ -55,13 +57,13 @@ public class LocalGroupsManger {
     }
 
     public void addGroup(String group) {
-        Set<String> groups = getGroups();
+        List<String> groups = getGroups();
         groups.add(group);
         setGroups(groups);
     }
 
     public void removeGroup(String group) {
-        Set<String> groups = getGroups();
+        List<String> groups = getGroups();
         for (Iterator<String> iter = groups.iterator(); iter.hasNext();) {
             String cur = iter.next();
             if (group.equals(cur)) {
@@ -73,14 +75,14 @@ public class LocalGroupsManger {
     }
 
     public void addFeed(String feed, Set<String> feedGroups) {
-        Set<String> feeds = getFeeds();
+        List<String> feeds = getFeeds();
         feeds.add(feed);
         setFeeds(feeds);
         setFeedGroups(feed, feedGroups);
     }
 
     public void removeFeed(String feed) {
-        Set<String> feeds = getFeeds();
+        List<String> feeds = getFeeds();
         for (Iterator<String> iter = feeds.iterator(); iter.hasNext();) {
             String cur = iter.next();
             if (feed.equals(cur)) {
@@ -104,19 +106,19 @@ public class LocalGroupsManger {
             String cur = iter.next();
             if (group.equals(cur)) {
                 iter.remove();
-                setGroups(groups);
+                setFeedGroups(feed, groups);
                 break;
             }
         }
     }
 
-    private void setGroups(Set<String> groups) {
-        sharedPrefs.edit().putStringSet(groupsKey, groups).apply();
+    private void setGroups(List<String> groups) {
+        sharedPrefs.edit().putStringSet(groupsKey, new HashSet<>(groups)).apply();
         this.groups = groups;
     }
 
-    private void setFeeds(Set<String> feeds) {
-        sharedPrefs.edit().putStringSet(feedsKey, feeds).apply();
+    private void setFeeds(List<String> feeds) {
+        sharedPrefs.edit().putStringSet(feedsKey, new HashSet<>(feeds)).apply();
         this.feeds = feeds;
     }
 
