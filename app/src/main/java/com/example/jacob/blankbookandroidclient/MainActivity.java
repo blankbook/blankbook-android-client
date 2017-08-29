@@ -1,6 +1,8 @@
 package com.example.jacob.blankbookandroidclient;
 
 import android.content.Intent;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
@@ -205,6 +207,8 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        postListRefresh.setColorSchemeResources(R.color.accent, R.color.primary, R.color.primaryDark);
     }
 
     public void onGroupSearchDialogResult(Group group) {

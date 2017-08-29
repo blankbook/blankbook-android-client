@@ -92,7 +92,7 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
         switch (viewType) {
             case MAIN_FEED_VIEW_HOLDER:
                 view = LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.main_drawer_list_header, parent, false);
+                        .inflate(R.layout.main_drawer_list_item, parent, false);
                 return new MainFeedViewHolder(view);
             case FEEDS_HEADER_VIEW_HOLDER:
                 view = LayoutInflater.from(parent.getContext())
@@ -265,11 +265,15 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
     }
 
     private void highlightMenuItem(View view) {
-        view.setBackgroundColor(ContextCompat.getColor(view.getContext(), R.color.primary));
+        view.setBackgroundColor(ContextCompat.getColor(view.getContext(), R.color.highlight));
+        ((TextView) view.findViewById(R.id.text))
+                .setTextColor(ContextCompat.getColor(view.getContext(), R.color.primary));
     }
 
     private void removeMenuItemBackground(View view) {
         view.setBackgroundColor(Color.TRANSPARENT);
+        ((TextView) view.findViewById(R.id.text))
+                .setTextColor(ContextCompat.getColor(view.getContext(), R.color.black));
     }
 
     public void clearHighlight() {

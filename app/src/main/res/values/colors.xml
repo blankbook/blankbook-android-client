@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- http://paletton.com/#uid=23l0u0knxuYdTK7jcAftut4uxm8 -->
+<!-- http://paletton.com/#uid=23q0u0kX2GsuvV9MWXwVxsEVznu -->
 <resources>
-    <color name="primary">#2A8A97</color>
-    <color name="primaryDark">#07606C</color>
-    <color name="accent">#F79841</color>
-    <color name="lightGrey">#FBFBFB</color>
-    <color name="darkGrey">#888888</color>
+    <color name="primary">#018DC2</color>
+    <color name="primaryDark">#015575</color>
+    <color name="accent">#FF8500</color>
+    <color name="highlight">#0B000000</color>
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
 </resources>

@@ -16,10 +16,10 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/lightGrey"
+            android:background="#FFF"
             app:layout_scrollFlags="scroll|enterAlways"
             app:popupTheme="@style/AppTheme.PopupOverlay"
-            app:titleTextColor="@color/darkGrey"/>
+            app:titleTextColor="#FFF"/>
 
     </android.support.design.widget.AppBarLayout>
 </android.support.constraint.ConstraintLayout>

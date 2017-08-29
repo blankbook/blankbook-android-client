@@ -26,7 +26,7 @@
                 android:background="?attr/colorPrimary"
                 app:layout_scrollFlags="scroll|enterAlways"
                 app:popupTheme="@style/AppTheme.PopupOverlay"
-                app:titleTextColor="@color/lightGrey" />
+                app:titleTextColor="@color/white" />
 
         </android.support.design.widget.AppBarLayout>
 
@@ -43,7 +43,7 @@
                 android:id="@+id/post_list"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@color/lightGrey"
+                android:background="@color/white"
                 android:clipToPadding="false"
                 android:paddingTop="@dimen/lg_margin"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior" />
@@ -82,13 +82,10 @@
         android:layout_width="250dp"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        android:background="@color/primaryDark"
+        android:background="@color/white"
         android:choiceMode="singleChoice"
         android:clipToPadding="false"
         android:divider="@android:color/transparent"
-        android:dividerHeight="0dp"
-        android:paddingBottom="20dp"
-        android:paddingTop="20dp"
-        android:textColor="@color/lightGrey" />
+        android:dividerHeight="0dp" />
 
 </android.support.v4.widget.DrawerLayout>
