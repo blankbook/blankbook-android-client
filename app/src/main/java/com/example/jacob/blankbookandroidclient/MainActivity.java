@@ -1,5 +1,6 @@
 package com.example.jacob.blankbookandroidclient;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
@@ -124,22 +125,6 @@ public class MainActivity extends AppCompatActivity {
                 this, root, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         toggle.syncState();
 
-        // TESTING ONLY
-        List<String> feeds = new ArrayList<>();
-        List<String> groups = new ArrayList<>();
-        feeds.add("feed1");
-        feeds.add("feed2");
-        feeds.add("feed3");
-        feeds.add("feed01");
-        feeds.add("feed02");
-        feeds.add("feed03");
-        feeds.add("feed11");
-        groups.add("mgroup");
-        groups.add("adfsasdf");
-        groups.add("group");
-        groups.add("mygroup");
-        // END TESTING ONLY
-
         drawer.setLayoutManager(new LinearLayoutManager(drawer.getContext()));
         postListAdapter = new MainDrawerRecyclerViewAdapter(localGroupsManager,
                 new MainDrawerRecyclerViewAdapter.OnSelect() {
@@ -158,11 +143,21 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
+                    public void onNewFeedSelect() {
+                    }
+
+                    @Override
                     public void onGroupSelect(String name) {
                         setSelectedGroup(name);
                         animateTitleChange(name);
                         closeDrawer();
                         setFabToComment();
+                    }
+
+                    @Override
+                    public void onNewGroupSelect() {
+                        Intent intent = new Intent(MainActivity.this, GroupCreationActivity.class);
+                        startActivity(intent);
                     }
                 });
         postListAdapter.highlightMainFeed();

@@ -48,7 +48,6 @@ public class PostListManager {
 
             @Override
             public void onFailure(Call<RankedPosts> call, Throwable t) {
-                Log.e("PostListManager", t.getMessage());
                 if (onUpdate != null) {
                     onUpdate.onFailure();
                 }

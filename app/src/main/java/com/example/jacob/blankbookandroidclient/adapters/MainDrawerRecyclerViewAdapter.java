@@ -177,7 +177,7 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Toast.makeText(view.getContext(), "Add feed", Toast.LENGTH_LONG).show();
+                    onSelect.onNewFeedSelect();
                 }
             });
         }
@@ -224,7 +224,7 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Toast.makeText(view.getContext(), "Add group", Toast.LENGTH_LONG).show();
+                    onSelect.onNewGroupSelect();
                 }
             });
         }
@@ -334,6 +334,10 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
 
         void onGroupSelect(String name);
 
+        void onNewGroupSelect();
+
         void onFeedSelect(String name);
+
+        void onNewFeedSelect();
     }
 }
