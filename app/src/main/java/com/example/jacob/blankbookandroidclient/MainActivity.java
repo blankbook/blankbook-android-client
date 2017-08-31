@@ -22,6 +22,7 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.ScaleAnimation;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
@@ -160,6 +161,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onNewGroupSelect() {
                         Intent intent = new Intent(MainActivity.this, GroupCreationActivity.class);
                         startActivity(intent);
+                        overridePendingTransition(R.anim.slide_in, R.anim.none);
                     }
                 });
         postListAdapter.highlightMainFeed();
@@ -232,13 +234,77 @@ public class MainActivity extends AppCompatActivity {
         refreshPostList(null);
     }
 
-    private void refreshPostList(PostListManager.OnUpdate onUpdate) {
+    private void refreshPostList(final PostListManager.OnUpdate onUpdate) {
         if (selectedGroups.size() == 1) {
             ((PostListRecyclerViewAdapter) postList.getAdapter()).setShowGroupName(false);
         } else {
             ((PostListRecyclerViewAdapter) postList.getAdapter()).setShowGroupName(true);
         }
-        postListManager.updatePostList(selectedGroups, null, null, null, "rank", null, null, null, onUpdate);
+
+        final Animation fadeIn = new AlphaAnimation(0f, 1f);
+        fadeIn.setDuration(200);
+        final Animation fadeOut = new AlphaAnimation(1f, 0f);
+        fadeOut.setDuration(200);
+
+        postList.startAnimation(fadeOut);
+        postList.getAnimation().setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {}
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                loadingIcon.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {}
+        });
+
+        postListManager.updatePostList(selectedGroups, null, null, null, "rank", null, null, null,
+                new PostListManager.OnUpdate() {
+            @Override
+            public void onSuccess() {
+                if (onUpdate != null) { onUpdate.onSuccess(); }
+                if (postList.isAnimating()) {
+                    postList.getAnimation().setAnimationListener(new Animation.AnimationListener() {
+                        @Override
+                        public void onAnimationStart(Animation animation) {}
+
+                        @Override
+                        public void onAnimationEnd(Animation animation) {
+                            postList.setAnimation(fadeIn);
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animation animation) {}
+                    });
+                } else {
+                    loadingIcon.setVisibility(View.INVISIBLE);
+                    postList.setAnimation(fadeIn);
+                }
+            }
+
+            @Override
+            public void onFailure() {
+                postList.setVisibility(View.VISIBLE);
+                if (onUpdate != null) { onUpdate.onFailure(); }
+                if (postList.isAnimating()) {
+                    postList.getAnimation().setAnimationListener(new Animation.AnimationListener() {
+                        @Override
+                        public void onAnimationStart(Animation animation) {}
+
+                        @Override
+                        public void onAnimationEnd(Animation animation) {
+                            postList.setAnimation(fadeIn);
+                        }
+
+                        @Override
+                        public void onAnimationRepeat(Animation animation) {}
+                    });
+                } else {
+                    postList.setAnimation(fadeIn);
+                }            }
+        });
     }
 
     private void closeDrawer() {

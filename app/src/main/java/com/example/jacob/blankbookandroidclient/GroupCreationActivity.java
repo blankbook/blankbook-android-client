@@ -25,18 +25,18 @@ public class GroupCreationActivity extends AppCompatActivity {
     private void setupToolbar() {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        getSupportActionBar().setTitle(getResources().getString(R.string.new_group));
         getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_close);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.accept:
-                finish();
+            case R.id.save:
+                finishAndAnimate();
                 break;
         }
-        return true;
+        return false;
     }
 
     @Override
@@ -47,7 +47,12 @@ public class GroupCreationActivity extends AppCompatActivity {
 
     @Override
     public boolean onSupportNavigateUp() {
-        finish();
+        finishAndAnimate();
         return false;
+    }
+
+    public void finishAndAnimate() {
+        finish();
+        overridePendingTransition(R.anim.none, R.anim.slide_out);
     }
 }

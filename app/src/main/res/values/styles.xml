@@ -35,7 +35,19 @@
         <item name="android:alpha">0.54</item>
         <item name="android:layout_marginStart">@dimen/lg_margin</item>
         <item name="android:layout_marginEnd">@dimen/lg_margin</item>
-        <item name="android:layout_marginTop">@dimen/lg_margin</item>
-        <item name="android:layout_marginBottom">@dimen/lg_margin</item>
+        <item name="android:layout_marginTop">@dimen/md_margin</item>
+        <item name="android:layout_marginBottom">@dimen/md_margin</item>
+    </style>
+
+    <style name="light_text">
+        <item name="android:textColor">#000</item>
+        <item name="android:fontFamily">@string/font_family_medium</item>
+        <item name="android:alpha">0.54</item>
+    </style>
+
+    <style name="medium_text">
+        <item name="android:textColor">#000</item>
+        <item name="android:fontFamily">@string/font_family_medium</item>
+        <item name="android:alpha">0.87</item>
     </style>
 </resources>

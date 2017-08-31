@@ -5,6 +5,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.ScaleAnimation;
 import android.widget.TextView;
 
 import com.example.jacob.blankbookandroidclient.R;
@@ -72,6 +74,14 @@ public class PostListRecyclerViewAdapter extends RecyclerView.Adapter<PostListRe
         ViewHolder(View view) {
             super(view);
             ButterKnife.bind(this, view);
+            final Animation animation = new ScaleAnimation(0.5f, 0.5f, 1f, 1f, 0.5f, 0.5f);
+            animation.setDuration(2000);
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    view.startAnimation(animation);
+                }
+            });
         }
 
         void setPost(Post post) {

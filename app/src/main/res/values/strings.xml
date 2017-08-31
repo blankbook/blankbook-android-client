@@ -22,5 +22,6 @@
     <string name="search_title">Search Groups</string>
     <string name="search_hint">Group&#8230;</string>
     <string name="no_results_found">No Results Found</string>
-    <string name="create_group">Create Group</string>
+    <string name="new_group">New Group</string>
+    <string name="save">SAVE</string>
 </resources>
