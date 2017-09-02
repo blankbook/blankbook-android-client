@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.example.jacob.blankbookandroidclient.GroupCreationActivity">
+
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/app_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/primary"
+            app:layout_scrollFlags="scroll|enterAlways"
+            app:popupTheme="@style/AppTheme.PopupOverlay"
+            app:titleTextColor="@color/white" />
+
+    </android.support.design.widget.AppBarLayout>
+
+    <EditText
+        android:id="@+id/name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/lg_margin"
+        android:layout_marginEnd="@dimen/lg_margin"
+        android:layout_marginTop="@dimen/md_margin"
+        android:hint="@string/name"
+        android:inputType="text"
+        android:maxLines="1"
+        android:textSize="@dimen/xl_font" />
+
+    <TextView
+        android:id="@+id/name_error"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="@dimen/md_font"
+        android:layout_marginStart="@dimen/lg_margin"
+        android:layout_marginEnd="@dimen/lg_margin"
+        android:paddingStart="@dimen/sm_margin"
+        android:paddingEnd="@dimen/sm_margin"
+        android:textColor="@color/red"/>
+
+    <Switch
+        android:id="@+id/password_protected"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/sm_margin"
+        android:layout_marginLeft="@dimen/lg_margin"
+        android:layout_marginRight="@dimen/lg_margin"
+        android:layout_marginTop="@dimen/sm_margin"
+        android:textSize="@dimen/lg_font"
+        android:text="@string/encryption" />
+
+    <LinearLayout
+        android:id="@+id/password_wrapper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/lg_margin"
+            android:layout_marginStart="@dimen/lg_margin"
+            android:hint="@string/password"
+            android:inputType="textPassword"
+            android:textSize="@dimen/lg_font" />
+
+        <TextView
+            android:id="@+id/password_error"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/md_font"
+            android:layout_marginStart="@dimen/lg_margin"
+            android:layout_marginEnd="@dimen/lg_margin"
+            android:paddingStart="@dimen/sm_margin"
+            android:paddingEnd="@dimen/sm_margin"
+            android:textColor="@color/red"/>
+
+        <EditText
+            android:id="@+id/password_confirmation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/lg_margin"
+            android:layout_marginEnd="@dimen/lg_margin"
+            android:hint="@string/password_confirmation"
+            android:inputType="textPassword"
+            android:textSize="@dimen/lg_font" />
+
+        <TextView
+            android:id="@+id/password_confirmation_error"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="@dimen/md_font"
+            android:layout_marginStart="@dimen/lg_margin"
+            android:layout_marginEnd="@dimen/lg_margin"
+            android:paddingStart="@dimen/sm_margin"
+            android:paddingEnd="@dimen/sm_margin"
+            android:textColor="@color/red"/>
+    </LinearLayout>
+</LinearLayout>

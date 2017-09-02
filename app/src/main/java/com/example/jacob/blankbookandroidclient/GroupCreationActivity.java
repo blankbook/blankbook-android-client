@@ -1,6 +1,9 @@
 package com.example.jacob.blankbookandroidclient;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -9,6 +12,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -165,14 +169,13 @@ public class GroupCreationActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.group_creation, menu);
+        getMenuInflater().inflate(R.menu.creation, menu);
         return true;
     }
 
     @Override
     public boolean onSupportNavigateUp() {
-        finish();
-        overridePendingTransition(R.anim.none, R.anim.fade_out);
+        finishAndAnimate();
         return false;
     }
 
@@ -211,9 +214,28 @@ public class GroupCreationActivity extends AppCompatActivity {
     private void onGroupCreation() {
         String groupName = name.getText().toString();
         LocalGroupsManger.getInstance().addGroup(groupName);
-        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-        intent.putExtra(MainActivity.NEW_GROUP_NAME_TAG,  groupName);
-        startActivity(intent);
-        overridePendingTransition(R.anim.none, R.anim.fade_out);
+        Intent resultIntent = new Intent();
+        resultIntent.putExtra(MainActivity.NEW_GROUP_NAME_TAG, groupName);
+        setResult(Activity.RESULT_OK, resultIntent);
+        finishAndAnimate();
+    }
+
+    private void finishAndAnimate() {
+        View view = this.getCurrentFocus();
+        if (view != null) {
+            InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+            // give time for everything to redraw after the keyboard collapses
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    finish();
+                    overridePendingTransition(R.anim.none, R.anim.fade_out);
+                }
+            }, 50L);
+        } else {
+            finish();
+            overridePendingTransition(R.anim.none, R.anim.fade_out);
+        }
     }
 }

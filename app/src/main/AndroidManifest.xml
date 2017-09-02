@@ -21,7 +21,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".GroupCreationActivity"></activity>
+        <activity android:name=".GroupCreationActivity" />
+        <activity android:name=".FeedCreationActivity" />
     </application>
 
 </manifest>

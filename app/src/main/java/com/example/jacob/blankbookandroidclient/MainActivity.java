@@ -14,6 +14,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.transition.TransitionManager;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -32,10 +33,7 @@ import com.example.jacob.blankbookandroidclient.api.models.Group;
 import com.example.jacob.blankbookandroidclient.managers.LocalGroupsManger;
 import com.example.jacob.blankbookandroidclient.managers.PostListManager;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import butterknife.BindView;
@@ -58,12 +56,14 @@ public class MainActivity extends AppCompatActivity {
     FrameLayout drawerWrapper;
 
     public static final String NEW_GROUP_NAME_TAG = "NewGroupName";
+    public static final int GROUP_CREATION_ACTIVITY_ID = 0;
 
     private PostListManager postListManager;
     private LocalGroupsManger localGroupsManager;
     private MainDrawerRecyclerViewAdapter postListAdapter;
     private ActionBar bar;
     private Set<String> selectedGroups = new HashSet<>();
+    private Set<Callback> runOnNextResume = new HashSet<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,11 +83,28 @@ public class MainActivity extends AppCompatActivity {
         setupAnimations();
         setFabToComment();
         setupPostList();
+    }
 
-        if (getIntent().hasExtra(NEW_GROUP_NAME_TAG)) {
-            String group = getIntent().getStringExtra(NEW_GROUP_NAME_TAG);
-            selectGroup(group);
-            postListManager.emptyPostList();
+    @Override
+    protected void onResume() {
+        super.onResume();
+        for (Callback callback : runOnNextResume) {
+            callback.onComplete();
+        }
+        runOnNextResume = new HashSet<>();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case GROUP_CREATION_ACTIVITY_ID:
+                if (data != null && data.hasExtra(NEW_GROUP_NAME_TAG)) {
+                    String group = data.getStringExtra(NEW_GROUP_NAME_TAG);
+                    selectGroup(group);
+                    postListManager.emptyPostList();
+                }
+                break;
         }
     }
 
@@ -162,7 +179,25 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onNewGroupSelect(View view) {
-                        goToNewGroupScreen();
+                        runOnNextResume.add(new Callback() {
+                            @Override
+                            public void onComplete() {
+                                new Handler().postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        reverseAnimateFromDrawerToBlankScreen();
+                                    }
+                                }, getResources().getInteger(android.R.integer.config_shortAnimTime));
+                            }
+                        });
+                        animateFromDrawerToBlankScreen(new Callback() {
+                            @Override
+                            public void onComplete() {
+                                Intent intent = new Intent(MainActivity.this, GroupCreationActivity.class);
+                                startActivityForResult(intent, GROUP_CREATION_ACTIVITY_ID);
+                                overridePendingTransition(R.anim.fade_in, R.anim.none);
+                            }
+                        });
                     }
                 });
         postListAdapter.highlightMainFeed();
@@ -260,7 +295,8 @@ public class MainActivity extends AppCompatActivity {
         postList.startAnimation(fadeOut);
         postList.getAnimation().setAnimationListener(new Animation.AnimationListener() {
             @Override
-            public void onAnimationStart(Animation animation) {}
+            public void onAnimationStart(Animation animation) {
+            }
 
             @Override
             public void onAnimationEnd(Animation animation) {
@@ -268,55 +304,64 @@ public class MainActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onAnimationRepeat(Animation animation) {}
+            public void onAnimationRepeat(Animation animation) {
+            }
         });
 
         postListManager.updatePostList(selectedGroups, null, null, null, "rank", null, null, null,
                 new PostListManager.OnUpdate() {
-            @Override
-            public void onSuccess() {
-                if (onUpdate != null) { onUpdate.onSuccess(); }
-                if (postList.isAnimating()) {
-                    postList.getAnimation().setAnimationListener(new Animation.AnimationListener() {
-                        @Override
-                        public void onAnimationStart(Animation animation) {}
+                    @Override
+                    public void onSuccess() {
+                        if (onUpdate != null) {
+                            onUpdate.onSuccess();
+                        }
+                        if (postList.isAnimating()) {
+                            postList.getAnimation().setAnimationListener(new Animation.AnimationListener() {
+                                @Override
+                                public void onAnimationStart(Animation animation) {
+                                }
 
-                        @Override
-                        public void onAnimationEnd(Animation animation) {
+                                @Override
+                                public void onAnimationEnd(Animation animation) {
+                                    postList.setAnimation(fadeIn);
+                                }
+
+                                @Override
+                                public void onAnimationRepeat(Animation animation) {
+                                }
+                            });
+                        } else {
+                            // LOADING ICON
                             postList.setAnimation(fadeIn);
                         }
+                    }
 
-                        @Override
-                        public void onAnimationRepeat(Animation animation) {}
-                    });
-                } else {
-                    // LOADING ICON
-                    postList.setAnimation(fadeIn);
-                }
-            }
+                    @Override
+                    public void onFailure() {
+                        postList.setVisibility(View.VISIBLE);
+                        if (onUpdate != null) {
+                            onUpdate.onFailure();
+                        }
+                        if (postList.isAnimating()) {
+                            postList.getAnimation().setAnimationListener(new Animation.AnimationListener() {
+                                @Override
+                                public void onAnimationStart(Animation animation) {
+                                }
 
-            @Override
-            public void onFailure() {
-                postList.setVisibility(View.VISIBLE);
-                if (onUpdate != null) { onUpdate.onFailure(); }
-                if (postList.isAnimating()) {
-                    postList.getAnimation().setAnimationListener(new Animation.AnimationListener() {
-                        @Override
-                        public void onAnimationStart(Animation animation) {}
+                                @Override
+                                public void onAnimationEnd(Animation animation) {
+                                    postList.setAnimation(fadeIn);
+                                }
 
-                        @Override
-                        public void onAnimationEnd(Animation animation) {
+                                @Override
+                                public void onAnimationRepeat(Animation animation) {
+                                }
+                            });
+                        } else {
                             postList.setAnimation(fadeIn);
                         }
-
-                        @Override
-                        public void onAnimationRepeat(Animation animation) {}
-                    });
-                } else {
-                    postList.setAnimation(fadeIn);
-                }
-            }
-        });
+                    }
+                });
     }
 
     private void closeDrawer() {
@@ -347,7 +392,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onAnimationEnd(Animation animation) {
                 bar.setTitle(newTitle);
-
                 AlphaAnimation fadeIn = new AlphaAnimation(0f, 1f);
                 fadeIn.setDuration(100);
                 title.startAnimation(fadeIn);
@@ -383,30 +427,16 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void goToNewGroupScreen() {
+    private void animateFromDrawerToBlankScreen(final Callback callback) {
         final int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
         Animation alphaAnimation = new AlphaAnimation(1f, 0f);
-        alphaAnimation.setDuration(shortAnimTime / 2);
+        alphaAnimation.setDuration(shortAnimTime);
+        alphaAnimation.setFillAfter(true);
         drawer.startAnimation(alphaAnimation);
-        drawer.getAnimation().setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                drawer.setAlpha(0f);
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-
-            }
-        });
         Animation widthAnimation = new WidthAnimation(drawerWrapper, root.getWidth());
-        widthAnimation.setDuration(shortAnimTime / 2);
+        widthAnimation.setDuration(shortAnimTime);
         widthAnimation.setInterpolator(new FastOutSlowInInterpolator());
+        widthAnimation.setFillAfter(true);
         widthAnimation.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) {
@@ -415,19 +445,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                Intent intent = new Intent(MainActivity.this, GroupCreationActivity.class);
-                startActivity(intent);
-                overridePendingTransition(R.anim.fade_in, R.anim.none);
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        ViewGroup.LayoutParams params = drawerWrapper.getLayoutParams();
-                        params.width = drawer.getWidth();
-                        drawerWrapper.setLayoutParams(params);
-                        drawer.setAlpha(1f);
-                        root.closeDrawer(Gravity.START);
-                    }
-                }, shortAnimTime);
+                callback.onComplete();
             }
 
             @Override
@@ -436,5 +454,34 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         drawerWrapper.startAnimation(widthAnimation);
+    }
+
+    private void reverseAnimateFromDrawerToBlankScreen() {
+        final int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+        Animation alphaAnimation = new AlphaAnimation(0f, 1f);
+        alphaAnimation.setFillAfter(true);
+        alphaAnimation.setDuration(shortAnimTime);
+        drawer.startAnimation(alphaAnimation);
+        Animation widthAnimation = new WidthAnimation(drawerWrapper, drawer.getWidth());
+        widthAnimation.setDuration(shortAnimTime);
+        widthAnimation.setFillAfter(true);
+        widthAnimation.setInterpolator(new FastOutSlowInInterpolator());
+        widthAnimation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {}
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                root.closeDrawer(Gravity.START);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {}
+        });
+        drawerWrapper.startAnimation(widthAnimation);
+    }
+
+    private interface Callback {
+        void onComplete();
     }
 }
