@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -12,14 +11,12 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.jacob.blankbookandroidclient.animations.HeightAnimation;
-import com.example.jacob.blankbookandroidclient.api.BlankBookAPI;
 import com.example.jacob.blankbookandroidclient.api.RetrofitClient;
 import com.example.jacob.blankbookandroidclient.api.models.Group;
 import com.example.jacob.blankbookandroidclient.managers.LocalGroupsManger;
@@ -215,7 +212,7 @@ public class GroupCreationActivity extends AppCompatActivity {
         String groupName = name.getText().toString();
         LocalGroupsManger.getInstance().addGroup(groupName);
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-        intent.putExtra(MainActivity.GROUP_NAME_TAG,  groupName);
+        intent.putExtra(MainActivity.NEW_GROUP_NAME_TAG,  groupName);
         startActivity(intent);
         overridePendingTransition(R.anim.none, R.anim.fade_out);
     }

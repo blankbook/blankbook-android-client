@@ -9,6 +9,7 @@ import com.example.jacob.blankbookandroidclient.api.models.RankedPosts;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -24,9 +25,9 @@ public class PostListManager {
         api = RetrofitClient.getInstance().getBlankBookAPI();
     }
 
-    public void updatePostList(@NonNull List<String> groupNames, Long firstRank, Long lastRank,
-                       Long rankVersion, String ordering, Long firstTime, Long lastTime,
-                       Integer maxCount, final OnUpdate onUpdate) {
+    public void updatePostList(@NonNull Set<String> groupNames, Long firstRank, Long lastRank,
+                               Long rankVersion, String ordering, Long firstTime, Long lastTime,
+                               Integer maxCount, final OnUpdate onUpdate) {
 
         lastCall = api.getPosts(groupNames, firstRank, lastRank, rankVersion, ordering, firstTime, lastTime, maxCount);
         lastCall.enqueue(new Callback<RankedPosts>() {

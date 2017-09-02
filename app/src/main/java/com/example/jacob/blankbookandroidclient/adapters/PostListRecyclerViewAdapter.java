@@ -33,13 +33,6 @@ public class PostListRecyclerViewAdapter extends RecyclerView.Adapter<PostListRe
         this.postListManager.addListener(postListener);
     }
 
-    public void setPostListManager(PostListManager postListManager) {
-        this.postListManager.removeListener(postListener);
-        this.postListManager = postListManager;
-        this.postListManager.addListener(postListener);
-        notifyDataSetChanged();
-    }
-
     public void setShowGroupName(boolean showGroupName) {
         this.showGroupName = showGroupName;
     }

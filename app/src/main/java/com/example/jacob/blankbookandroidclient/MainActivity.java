@@ -34,7 +34,9 @@ import com.example.jacob.blankbookandroidclient.managers.PostListManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -55,13 +57,13 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.drawer_wrapper)
     FrameLayout drawerWrapper;
 
-    public static final String GROUP_NAME_TAG = "GroupName";
+    public static final String NEW_GROUP_NAME_TAG = "NewGroupName";
 
     private PostListManager postListManager;
     private LocalGroupsManger localGroupsManager;
     private MainDrawerRecyclerViewAdapter postListAdapter;
     private ActionBar bar;
-    private List<String> selectedGroups = new ArrayList<>();
+    private Set<String> selectedGroups = new HashSet<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,19 +78,15 @@ public class MainActivity extends AppCompatActivity {
         localGroupsManager = LocalGroupsManger.getInstance();
         localGroupsManager.init(this);
 
-        setupPostList();
         setupDrawer();
         setupPostListRefresh();
         setupAnimations();
         setFabToComment();
+        setupPostList();
 
-        if (getIntent().hasExtra(GROUP_NAME_TAG)) {
-            String group = getIntent().getStringExtra(GROUP_NAME_TAG);
-            selectedGroups = Collections.singletonList(group);
-            // TODO: REFACTOR THIS so the logic is shared and less fragile
-            ((MainDrawerRecyclerViewAdapter) drawer.getAdapter()).highlightGroup(group);
-            bar.setTitle(group);
-            ((PostListRecyclerViewAdapter) postList.getAdapter()).setShowGroupName(false);
+        if (getIntent().hasExtra(NEW_GROUP_NAME_TAG)) {
+            String group = getIntent().getStringExtra(NEW_GROUP_NAME_TAG);
+            selectGroup(group);
             postListManager.emptyPostList();
         }
     }
@@ -126,12 +124,7 @@ public class MainActivity extends AppCompatActivity {
     private void setupPostList() {
         postList.setLayoutManager(new LinearLayoutManager(postList.getContext()));
         postList.setAdapter(new PostListRecyclerViewAdapter(postListManager));
-
-        // TESTING
-        selectedGroups.add("group");
-        selectedGroups.add("mygroup");
-        postListManager.updatePostList(selectedGroups, 20L, 30L, null, "rank", null, null, null, null);
-        // END TESTING
+        selectMainFeed();
     }
 
     private void setupDrawer() {
@@ -144,14 +137,14 @@ public class MainActivity extends AppCompatActivity {
                 new MainDrawerRecyclerViewAdapter.OnSelect() {
                     @Override
                     public void onMainFeedSelect(View view) {
-                        animateTitleChange(getString(R.string.main_feed));
+                        selectMainFeed();
                         closeDrawer();
                         setFabToComment();
                     }
 
                     @Override
                     public void onFeedSelect(View view, String name) {
-                        animateTitleChange(name);
+                        selectFeed(name, LocalGroupsManger.getInstance().getFeedGroups(name));
                         closeDrawer();
                         setFabToComment();
                     }
@@ -162,8 +155,7 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onGroupSelect(View view, String name) {
-                        setSelectedGroup(name);
-                        animateTitleChange(name);
+                        selectGroup(name);
                         closeDrawer();
                         setFabToComment();
                     }
@@ -214,19 +206,39 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onGroupSearchDialogResult(Group group) {
-        setSelectedGroup(group.Name);
-        animateTitleChange(group.Name);
-        postListAdapter.clearHighlight();
+        selectGroup(group.Name);
         setFabToAddGroup(group);
     }
 
-    private void setSelectedGroup(String group) {
-        setSelectedGroups(Collections.singletonList(group));
+    private void selectMainFeed() {
+        ((PostListRecyclerViewAdapter) postList.getAdapter()).setShowGroupName(true);
+        selectedGroups = new HashSet<>(LocalGroupsManger.getInstance().getGroups());
+        setActivityTitle(getResources().getString(R.string.main_feed));
+        postListAdapter.highlightMainFeed();
+        refreshPostList();
     }
 
-    private void setSelectedGroups(List<String> groups) {
+    private void selectFeed(String name, Set<String> groups) {
+        ((PostListRecyclerViewAdapter) postList.getAdapter()).setShowGroupName(true);
         selectedGroups = groups;
+        setActivityTitle(name);
+        postListAdapter.highlightFeed(name);
         refreshPostList();
+    }
+
+    private void selectGroup(String group) {
+        selectGroup(group, true);
+    }
+
+    private void selectGroup(String group, boolean refreshList) {
+        ((PostListRecyclerViewAdapter) postList.getAdapter()).setShowGroupName(false);
+        selectedGroups.clear();
+        selectedGroups.add(group);
+        postListAdapter.highlightGroup(group);
+        setActivityTitle(group);
+        if (refreshList) {
+            refreshPostList();
+        }
     }
 
     private void refreshPostList() {
@@ -318,7 +330,10 @@ public class MainActivity extends AppCompatActivity {
         }, 250);
     }
 
-    private void animateTitleChange(final String newTitle) {
+    private void setActivityTitle(final String newTitle) {
+        if (newTitle.equals(bar.getTitle().toString())) {
+            return;
+        }
         final View title = toolbar.getChildAt(0);
 
         AlphaAnimation fadeOut = new AlphaAnimation(1f, 0f);
@@ -361,15 +376,11 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addGroupAndGo(targetGroup);
+                LocalGroupsManger.getInstance().addGroup(targetGroup.Name);
+                postListAdapter.highlightGroup(targetGroup.Name);
+                setFabToComment();
             }
         });
-    }
-
-    private void addGroupAndGo(final Group group) {
-        localGroupsManager.addGroup(group.Name);
-        ((MainDrawerRecyclerViewAdapter) drawer.getAdapter()).highlightGroup(group.Name);
-        setFabToComment();
     }
 
     private void goToNewGroupScreen() {
