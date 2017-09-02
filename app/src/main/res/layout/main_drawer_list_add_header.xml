@@ -7,13 +7,13 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/black"
-        android:alpha="0.15" />
+        android:alpha="0.15"
+        android:background="@color/black" />
 
     <TextView
         android:id="@+id/text"
+        style="@style/list_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:drawableEnd="@drawable/ic_add_black"
-        style="@style/list_header" />
+        android:drawableEnd="@drawable/ic_add_black" />
 </LinearLayout>

@@ -24,4 +24,11 @@
     <string name="no_results_found">No Results Found</string>
     <string name="new_group">New Group</string>
     <string name="save">SAVE</string>
+    <string name="name">Name</string>
+    <string name="password">Password</string>
+    <string name="password_confirmation">Confirm Password</string>
+    <string name="encryption">Encryption</string>
+    <string name="name_taken_error">name taken</string>
+    <string name="passwords_no_match_error">passwords don\'t match</string>
+    <string name="error_creating_group">error creating group</string>
 </resources>

@@ -1,7 +1,6 @@
 package com.example.jacob.blankbookandroidclient.managers;
 
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.example.jacob.blankbookandroidclient.api.BlankBookAPI;
 import com.example.jacob.blankbookandroidclient.api.RetrofitClient;
@@ -19,6 +18,7 @@ public class PostListManager {
     private List<Post> posts = new ArrayList<>();
     private final BlankBookAPI api;
     private List<UpdateListener> listeners = new ArrayList<>();
+    private Call<RankedPosts> lastCall;
 
     public PostListManager() {
         api = RetrofitClient.getInstance().getBlankBookAPI();
@@ -28,8 +28,8 @@ public class PostListManager {
                        Long rankVersion, String ordering, Long firstTime, Long lastTime,
                        Integer maxCount, final OnUpdate onUpdate) {
 
-        api.getPosts(groupNames, firstRank, lastRank, rankVersion, ordering, firstTime, lastTime, maxCount)
-                .enqueue(new Callback<RankedPosts>() {
+        lastCall = api.getPosts(groupNames, firstRank, lastRank, rankVersion, ordering, firstTime, lastTime, maxCount);
+        lastCall.enqueue(new Callback<RankedPosts>() {
             @Override
             public void onResponse(Call<RankedPosts> call, Response<RankedPosts> response) {
                 final RankedPosts body = response.body();
@@ -53,6 +53,12 @@ public class PostListManager {
                 }
             }
         });
+    }
+
+    public void emptyPostList() {
+        lastCall.cancel();
+        posts = new ArrayList<>();
+        notifyListeners();
     }
 
     public List<Post> getPostList() {

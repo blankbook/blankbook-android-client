@@ -1,12 +1,11 @@
 package com.example.jacob.blankbookandroidclient;
 
 import android.content.Intent;
-import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.LinearLayoutManager;
@@ -15,6 +14,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.support.v7.widget.Toolbar;
@@ -22,12 +22,12 @@ import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.ScaleAnimation;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.example.jacob.blankbookandroidclient.adapters.MainDrawerRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.adapters.PostListRecyclerViewAdapter;
+import com.example.jacob.blankbookandroidclient.animations.WidthAnimation;
 import com.example.jacob.blankbookandroidclient.api.models.Group;
 import com.example.jacob.blankbookandroidclient.managers.LocalGroupsManger;
 import com.example.jacob.blankbookandroidclient.managers.PostListManager;
@@ -50,10 +50,12 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView drawer;
     @BindView(R.id.post_list)
     RecyclerView postList;
-    @BindView(R.id.loading_icon)
-    FrameLayout loadingIcon;
     @BindView(R.id.post_list_refresh)
     SwipeRefreshLayout postListRefresh;
+    @BindView(R.id.drawer_wrapper)
+    FrameLayout drawerWrapper;
+
+    public static final String GROUP_NAME_TAG = "GroupName";
 
     private PostListManager postListManager;
     private LocalGroupsManger localGroupsManager;
@@ -74,12 +76,21 @@ public class MainActivity extends AppCompatActivity {
         localGroupsManager = LocalGroupsManger.getInstance();
         localGroupsManager.init(this);
 
-        setupLoadingSpinner();
         setupPostList();
         setupDrawer();
         setupPostListRefresh();
         setupAnimations();
         setFabToComment();
+
+        if (getIntent().hasExtra(GROUP_NAME_TAG)) {
+            String group = getIntent().getStringExtra(GROUP_NAME_TAG);
+            selectedGroups = Collections.singletonList(group);
+            // TODO: REFACTOR THIS so the logic is shared and less fragile
+            ((MainDrawerRecyclerViewAdapter) drawer.getAdapter()).highlightGroup(group);
+            bar.setTitle(group);
+            ((PostListRecyclerViewAdapter) postList.getAdapter()).setShowGroupName(false);
+            postListManager.emptyPostList();
+        }
     }
 
     @Override
@@ -132,25 +143,25 @@ public class MainActivity extends AppCompatActivity {
         postListAdapter = new MainDrawerRecyclerViewAdapter(localGroupsManager,
                 new MainDrawerRecyclerViewAdapter.OnSelect() {
                     @Override
-                    public void onMainFeedSelect() {
+                    public void onMainFeedSelect(View view) {
                         animateTitleChange(getString(R.string.main_feed));
                         closeDrawer();
                         setFabToComment();
                     }
 
                     @Override
-                    public void onFeedSelect(String name) {
+                    public void onFeedSelect(View view, String name) {
                         animateTitleChange(name);
                         closeDrawer();
                         setFabToComment();
                     }
 
                     @Override
-                    public void onNewFeedSelect() {
+                    public void onNewFeedSelect(View view) {
                     }
 
                     @Override
-                    public void onGroupSelect(String name) {
+                    public void onGroupSelect(View view, String name) {
                         setSelectedGroup(name);
                         animateTitleChange(name);
                         closeDrawer();
@@ -158,24 +169,13 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onNewGroupSelect() {
-                        Intent intent = new Intent(MainActivity.this, GroupCreationActivity.class);
-                        startActivity(intent);
-                        overridePendingTransition(R.anim.slide_in, R.anim.none);
+                    public void onNewGroupSelect(View view) {
+                        goToNewGroupScreen();
                     }
                 });
         postListAdapter.highlightMainFeed();
         bar.setTitle(getString(R.string.main_feed));
         drawer.setAdapter(postListAdapter);
-    }
-
-    private void setupLoadingSpinner() {
-        postListManager.addListener(new PostListManager.UpdateListener() {
-            @Override
-            public void onUpdate() {
-                loadingIcon.setVisibility(View.GONE);
-            }
-        });
     }
 
     private void setupPostListRefresh() {
@@ -226,7 +226,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void setSelectedGroups(List<String> groups) {
         selectedGroups = groups;
-        loadingIcon.setVisibility(View.VISIBLE);
         refreshPostList();
     }
 
@@ -253,7 +252,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                loadingIcon.setVisibility(View.VISIBLE);
+                // LOADING ICON
             }
 
             @Override
@@ -279,7 +278,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onAnimationRepeat(Animation animation) {}
                     });
                 } else {
-                    loadingIcon.setVisibility(View.INVISIBLE);
+                    // LOADING ICON
                     postList.setAnimation(fadeIn);
                 }
             }
@@ -303,7 +302,8 @@ public class MainActivity extends AppCompatActivity {
                     });
                 } else {
                     postList.setAnimation(fadeIn);
-                }            }
+                }
+            }
         });
     }
 
@@ -368,8 +368,62 @@ public class MainActivity extends AppCompatActivity {
 
     private void addGroupAndGo(final Group group) {
         localGroupsManager.addGroup(group.Name);
-        drawer.getAdapter().notifyDataSetChanged();
-        setSelectedGroup(group.Name);
+        ((MainDrawerRecyclerViewAdapter) drawer.getAdapter()).highlightGroup(group.Name);
         setFabToComment();
+    }
+
+    private void goToNewGroupScreen() {
+        final int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+        Animation alphaAnimation = new AlphaAnimation(1f, 0f);
+        alphaAnimation.setDuration(shortAnimTime / 2);
+        drawer.startAnimation(alphaAnimation);
+        drawer.getAnimation().setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                drawer.setAlpha(0f);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        Animation widthAnimation = new WidthAnimation(drawerWrapper, root.getWidth());
+        widthAnimation.setDuration(shortAnimTime / 2);
+        widthAnimation.setInterpolator(new FastOutSlowInInterpolator());
+        widthAnimation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                Intent intent = new Intent(MainActivity.this, GroupCreationActivity.class);
+                startActivity(intent);
+                overridePendingTransition(R.anim.fade_in, R.anim.none);
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        ViewGroup.LayoutParams params = drawerWrapper.getLayoutParams();
+                        params.width = drawer.getWidth();
+                        drawerWrapper.setLayoutParams(params);
+                        drawer.setAlpha(1f);
+                        root.closeDrawer(Gravity.START);
+                    }
+                }, shortAnimTime);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
+        drawerWrapper.startAnimation(widthAnimation);
     }
 }

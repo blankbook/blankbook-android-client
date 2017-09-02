@@ -1,8 +1,13 @@
 package com.example.jacob.blankbookandroidclient.adapters;
 
 import android.graphics.Color;
+import android.graphics.Rect;
+import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
+import android.transition.Explode;
+import android.transition.Transition;
+import android.transition.TransitionManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -42,13 +47,13 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
         updateHighlight();
     }
 
-    private void highlightFeed(String feed) {
+    public void highlightFeed(String feed) {
         clearHighlight();
         this.highlightedFeed = feed;
         updateHighlight();
     }
 
-    private void highlightGroup(String group) {
+    public void highlightGroup(String group) {
         clearHighlight();
         this.highlightedGroup = group;
         updateHighlight();
@@ -154,7 +159,7 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    onSelect.onMainFeedSelect();
+                    onSelect.onMainFeedSelect(view);
                     highlightMainFeed();
                 }
             });
@@ -177,7 +182,7 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    onSelect.onNewFeedSelect();
+                    onSelect.onNewFeedSelect(view);
                 }
             });
         }
@@ -201,7 +206,7 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
             this.view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    onSelect.onFeedSelect(feed);
+                    onSelect.onFeedSelect(view, feed);
                     highlightFeed(feed);
                 }
             });
@@ -224,7 +229,7 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    onSelect.onNewGroupSelect();
+                    onSelect.onNewGroupSelect(view);
                 }
             });
         }
@@ -248,7 +253,7 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
             this.view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    onSelect.onGroupSelect(group);
+                    onSelect.onGroupSelect(view ,group);
                     highlightGroup(group);
                 }
             });
@@ -334,14 +339,14 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
     }
 
     public interface OnSelect {
-        void onMainFeedSelect();
+        void onMainFeedSelect(View view);
 
-        void onGroupSelect(String name);
+        void onGroupSelect(View view, String name);
 
-        void onNewGroupSelect();
+        void onNewGroupSelect(View view);
 
-        void onFeedSelect(String name);
+        void onFeedSelect(View view, String name);
 
-        void onNewFeedSelect();
+        void onNewFeedSelect(View view);
     }
 }
