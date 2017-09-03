@@ -62,6 +62,28 @@ public class GroupCreationActivity extends AppCompatActivity {
         name.requestFocus();
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.save:
+                save();
+                break;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.creation, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        finishAndAnimate();
+        return false;
+    }
+
     private void setupToolbar() {
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -155,28 +177,6 @@ public class GroupCreationActivity extends AppCompatActivity {
         Animation expand = new HeightAnimation(passwordWrapper, 0);
         expand.setDuration(shortAnimTime);
         passwordWrapper.startAnimation(expand);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.save:
-                save();
-                break;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.creation, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onSupportNavigateUp() {
-        finishAndAnimate();
-        return false;
     }
 
     private void save() {

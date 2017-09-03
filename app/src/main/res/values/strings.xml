@@ -32,4 +32,5 @@
     <string name="passwords_no_match_error">passwords don\'t match</string>
     <string name="error_creating_group">error creating group</string>
     <string name="new_feed">New Feed</string>
+    <string name="error_creating_feed">error creating feed</string>
 </resources>

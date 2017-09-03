@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
     android:orientation="vertical"
     tools:context="com.example.jacob.blankbookandroidclient.GroupCreationActivity">
 
@@ -28,8 +29,8 @@
         android:id="@+id/name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/lg_margin"
         android:layout_marginEnd="@dimen/lg_margin"
+        android:layout_marginStart="@dimen/lg_margin"
         android:layout_marginTop="@dimen/md_margin"
         android:hint="@string/name"
         android:inputType="text"
@@ -40,12 +41,12 @@
         android:id="@+id/name_error"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/md_font"
-        android:layout_marginStart="@dimen/lg_margin"
         android:layout_marginEnd="@dimen/lg_margin"
-        android:paddingStart="@dimen/sm_margin"
+        android:layout_marginStart="@dimen/lg_margin"
         android:paddingEnd="@dimen/sm_margin"
-        android:textColor="@color/red"/>
+        android:paddingStart="@dimen/sm_margin"
+        android:textColor="@color/red"
+        android:textSize="@dimen/md_font" />
 
     <Switch
         android:id="@+id/password_protected"
@@ -55,8 +56,8 @@
         android:layout_marginLeft="@dimen/lg_margin"
         android:layout_marginRight="@dimen/lg_margin"
         android:layout_marginTop="@dimen/sm_margin"
-        android:textSize="@dimen/lg_font"
-        android:text="@string/encryption" />
+        android:text="@string/encryption"
+        android:textSize="@dimen/lg_font" />
 
     <LinearLayout
         android:id="@+id/password_wrapper"
@@ -78,19 +79,19 @@
             android:id="@+id/password_error"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="@dimen/md_font"
-            android:layout_marginStart="@dimen/lg_margin"
             android:layout_marginEnd="@dimen/lg_margin"
-            android:paddingStart="@dimen/sm_margin"
+            android:layout_marginStart="@dimen/lg_margin"
             android:paddingEnd="@dimen/sm_margin"
-            android:textColor="@color/red"/>
+            android:paddingStart="@dimen/sm_margin"
+            android:textColor="@color/red"
+            android:textSize="@dimen/md_font" />
 
         <EditText
             android:id="@+id/password_confirmation"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/lg_margin"
             android:layout_marginEnd="@dimen/lg_margin"
+            android:layout_marginStart="@dimen/lg_margin"
             android:hint="@string/password_confirmation"
             android:inputType="textPassword"
             android:textSize="@dimen/lg_font" />
@@ -99,11 +100,11 @@
             android:id="@+id/password_confirmation_error"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="@dimen/md_font"
-            android:layout_marginStart="@dimen/lg_margin"
             android:layout_marginEnd="@dimen/lg_margin"
-            android:paddingStart="@dimen/sm_margin"
+            android:layout_marginStart="@dimen/lg_margin"
             android:paddingEnd="@dimen/sm_margin"
-            android:textColor="@color/red"/>
+            android:paddingStart="@dimen/sm_margin"
+            android:textColor="@color/red"
+            android:textSize="@dimen/md_font" />
     </LinearLayout>
 </LinearLayout>

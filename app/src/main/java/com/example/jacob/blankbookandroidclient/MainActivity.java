@@ -15,6 +15,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.transition.TransitionManager;
+import android.util.Log;
 import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -33,6 +34,7 @@ import com.example.jacob.blankbookandroidclient.api.models.Group;
 import com.example.jacob.blankbookandroidclient.managers.LocalGroupsManger;
 import com.example.jacob.blankbookandroidclient.managers.PostListManager;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -56,7 +58,9 @@ public class MainActivity extends AppCompatActivity {
     FrameLayout drawerWrapper;
 
     public static final String NEW_GROUP_NAME_TAG = "NewGroupName";
+    public static final String NEW_FEED_NAME_TAG = "NewFeedName";
     public static final int GROUP_CREATION_ACTIVITY_ID = 0;
+    public static final int FEED_CREATION_ACTIVITY_ID = 1;
 
     private PostListManager postListManager;
     private LocalGroupsManger localGroupsManager;
@@ -103,6 +107,12 @@ public class MainActivity extends AppCompatActivity {
                     String group = data.getStringExtra(NEW_GROUP_NAME_TAG);
                     selectGroup(group);
                     postListManager.emptyPostList();
+                }
+                break;
+            case FEED_CREATION_ACTIVITY_ID:
+                if (data != null && data.hasExtra(NEW_FEED_NAME_TAG)) {
+                    String feed = data.getStringExtra(NEW_FEED_NAME_TAG);
+                    selectFeed(feed);
                 }
                 break;
         }
@@ -161,13 +171,14 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onFeedSelect(View view, String name) {
-                        selectFeed(name, LocalGroupsManger.getInstance().getFeedGroups(name));
+                        selectFeed(name);
                         closeDrawer();
                         setFabToComment();
                     }
 
                     @Override
                     public void onNewFeedSelect(View view) {
+                        startActivityFromDrawer(FeedCreationActivity.class, FEED_CREATION_ACTIVITY_ID);
                     }
 
                     @Override
@@ -179,30 +190,34 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onNewGroupSelect(View view) {
-                        runOnNextResume.add(new Callback() {
-                            @Override
-                            public void onComplete() {
-                                new Handler().postDelayed(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        reverseAnimateFromDrawerToBlankScreen();
-                                    }
-                                }, getResources().getInteger(android.R.integer.config_shortAnimTime));
-                            }
-                        });
-                        animateFromDrawerToBlankScreen(new Callback() {
-                            @Override
-                            public void onComplete() {
-                                Intent intent = new Intent(MainActivity.this, GroupCreationActivity.class);
-                                startActivityForResult(intent, GROUP_CREATION_ACTIVITY_ID);
-                                overridePendingTransition(R.anim.fade_in, R.anim.none);
-                            }
-                        });
+                        startActivityFromDrawer(GroupCreationActivity.class, GROUP_CREATION_ACTIVITY_ID);
                     }
                 });
         postListAdapter.highlightMainFeed();
         bar.setTitle(getString(R.string.main_feed));
         drawer.setAdapter(postListAdapter);
+    }
+
+    private void startActivityFromDrawer(final Class activityClass, final int activityId) {
+        runOnNextResume.add(new Callback() {
+            @Override
+            public void onComplete() {
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        reverseAnimateFromDrawerToBlankScreen();
+                    }
+                }, getResources().getInteger(android.R.integer.config_shortAnimTime));
+            }
+        });
+        animateFromDrawerToBlankScreen(new Callback() {
+            @Override
+            public void onComplete() {
+                Intent intent = new Intent(MainActivity.this, activityClass);
+                startActivityForResult(intent, activityId);
+                overridePendingTransition(R.anim.fade_in, R.anim.none);
+            }
+        });
     }
 
     private void setupPostListRefresh() {
@@ -246,16 +261,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectMainFeed() {
-        ((PostListRecyclerViewAdapter) postList.getAdapter()).setShowGroupName(true);
         selectedGroups = new HashSet<>(LocalGroupsManger.getInstance().getGroups());
         setActivityTitle(getResources().getString(R.string.main_feed));
         postListAdapter.highlightMainFeed();
         refreshPostList();
     }
 
-    private void selectFeed(String name, Set<String> groups) {
-        ((PostListRecyclerViewAdapter) postList.getAdapter()).setShowGroupName(true);
-        selectedGroups = groups;
+    private void selectFeed(String name) {
+        Log.d("MainActivity", "Selecting feed " + name);
+        selectedGroups = LocalGroupsManger.getInstance().getFeedGroups(name);
+        Log.d("MainActivity", "grooup count is " + selectedGroups.size());
+        for (String group : selectedGroups) {
+            Log.d("MainActivity", "selected group: " + group);
+        }
         setActivityTitle(name);
         postListAdapter.highlightFeed(name);
         refreshPostList();
@@ -266,7 +284,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectGroup(String group, boolean refreshList) {
-        ((PostListRecyclerViewAdapter) postList.getAdapter()).setShowGroupName(false);
         selectedGroups.clear();
         selectedGroups.add(group);
         postListAdapter.highlightGroup(group);
@@ -323,6 +340,7 @@ public class MainActivity extends AppCompatActivity {
 
                                 @Override
                                 public void onAnimationEnd(Animation animation) {
+                                    postList.getAdapter().notifyDataSetChanged();
                                     postList.setAnimation(fadeIn);
                                 }
 
