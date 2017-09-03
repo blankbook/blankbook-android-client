@@ -14,9 +14,6 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.transition.TransitionManager;
-import android.util.Log;
-import android.view.ViewGroup;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.support.v7.widget.Toolbar;
@@ -34,7 +31,6 @@ import com.example.jacob.blankbookandroidclient.api.models.Group;
 import com.example.jacob.blankbookandroidclient.managers.LocalGroupsManger;
 import com.example.jacob.blankbookandroidclient.managers.PostListManager;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -64,10 +60,11 @@ public class MainActivity extends AppCompatActivity {
 
     private PostListManager postListManager;
     private LocalGroupsManger localGroupsManager;
-    private MainDrawerRecyclerViewAdapter postListAdapter;
+    private MainDrawerRecyclerViewAdapter drawerAdapter;
     private ActionBar bar;
     private Set<String> selectedGroups = new HashSet<>();
     private Set<Callback> runOnNextResume = new HashSet<>();
+    private Callback deleteCallback;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         for (Callback callback : runOnNextResume) {
-            callback.onComplete();
+            callback.run();
         }
         runOnNextResume = new HashSet<>();
     }
@@ -140,6 +137,10 @@ public class MainActivity extends AppCompatActivity {
 
         if (id == R.id.action_settings) {
             return true;
+        } else if (id == R.id.action_remove) {
+            if (deleteCallback != null) {
+                deleteCallback.run();
+            }
         } else if (id == R.id.search) {
             GroupSearchDialogFragment dialogFragment = new GroupSearchDialogFragment();
             dialogFragment.show(getFragmentManager(), "tag");
@@ -160,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
         toggle.syncState();
 
         drawer.setLayoutManager(new LinearLayoutManager(drawer.getContext()));
-        postListAdapter = new MainDrawerRecyclerViewAdapter(localGroupsManager,
+        drawerAdapter = new MainDrawerRecyclerViewAdapter(localGroupsManager,
                 new MainDrawerRecyclerViewAdapter.OnSelect() {
                     @Override
                     public void onMainFeedSelect(View view) {
@@ -193,15 +194,15 @@ public class MainActivity extends AppCompatActivity {
                         startActivityFromDrawer(GroupCreationActivity.class, GROUP_CREATION_ACTIVITY_ID);
                     }
                 });
-        postListAdapter.highlightMainFeed();
+        drawerAdapter.highlightMainFeed();
         bar.setTitle(getString(R.string.main_feed));
-        drawer.setAdapter(postListAdapter);
+        drawer.setAdapter(drawerAdapter);
     }
 
     private void startActivityFromDrawer(final Class activityClass, final int activityId) {
         runOnNextResume.add(new Callback() {
             @Override
-            public void onComplete() {
+            public void run() {
                 new Handler().postDelayed(new Runnable() {
                     @Override
                     public void run() {
@@ -212,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
         });
         animateFromDrawerToBlankScreen(new Callback() {
             @Override
-            public void onComplete() {
+            public void run() {
                 Intent intent = new Intent(MainActivity.this, activityClass);
                 startActivityForResult(intent, activityId);
                 overridePendingTransition(R.anim.fade_in, R.anim.none);
@@ -261,21 +262,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectMainFeed() {
+        deleteCallback = null;
         selectedGroups = new HashSet<>(LocalGroupsManger.getInstance().getGroups());
         setActivityTitle(getResources().getString(R.string.main_feed));
-        postListAdapter.highlightMainFeed();
+        drawerAdapter.highlightMainFeed();
         refreshPostList();
     }
 
-    private void selectFeed(String name) {
-        Log.d("MainActivity", "Selecting feed " + name);
-        selectedGroups = LocalGroupsManger.getInstance().getFeedGroups(name);
-        Log.d("MainActivity", "grooup count is " + selectedGroups.size());
-        for (String group : selectedGroups) {
-            Log.d("MainActivity", "selected group: " + group);
-        }
-        setActivityTitle(name);
-        postListAdapter.highlightFeed(name);
+    private void selectFeed(final String feed) {
+        deleteCallback = new Callback() {
+            @Override
+            public void run() {
+                LocalGroupsManger.getInstance().removeFeed(feed);
+                drawerAdapter.notifyDataSetChanged();
+                selectMainFeed();
+            }
+        };
+        selectedGroups = LocalGroupsManger.getInstance().getFeedGroups(feed);
+        setActivityTitle(feed);
+        drawerAdapter.highlightFeed(feed);
         refreshPostList();
     }
 
@@ -283,10 +288,18 @@ public class MainActivity extends AppCompatActivity {
         selectGroup(group, true);
     }
 
-    private void selectGroup(String group, boolean refreshList) {
+    private void selectGroup(final String group, boolean refreshList) {
+        deleteCallback = new Callback() {
+            @Override
+            public void run() {
+                LocalGroupsManger.getInstance().removeGroup(group);
+                drawerAdapter.notifyDataSetChanged();
+                selectMainFeed();
+            }
+        };
         selectedGroups.clear();
         selectedGroups.add(group);
-        postListAdapter.highlightGroup(group);
+        drawerAdapter.highlightGroup(group);
         setActivityTitle(group);
         if (refreshList) {
             refreshPostList();
@@ -439,7 +452,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 LocalGroupsManger.getInstance().addGroup(targetGroup.Name);
-                postListAdapter.highlightGroup(targetGroup.Name);
+                drawerAdapter.highlightGroup(targetGroup.Name);
                 setFabToComment();
             }
         });
@@ -463,7 +476,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                callback.onComplete();
+                callback.run();
             }
 
             @Override
@@ -500,6 +513,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private interface Callback {
-        void onComplete();
+        void run();
     }
 }
