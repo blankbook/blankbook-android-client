@@ -14,6 +14,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.support.v7.widget.Toolbar;
@@ -58,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
     public static final int GROUP_CREATION_ACTIVITY_ID = 0;
     public static final int FEED_CREATION_ACTIVITY_ID = 1;
 
+    private Menu menu;
     private PostListManager postListManager;
     private LocalGroupsManger localGroupsManager;
     private MainDrawerRecyclerViewAdapter drawerAdapter;
@@ -65,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
     private Set<String> selectedGroups = new HashSet<>();
     private Set<Callback> runOnNextResume = new HashSet<>();
     private Callback deleteCallback;
+    private boolean onMainFeed = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,6 +130,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main, menu);
+        this.menu = menu;
+        if (onMainFeed) {
+            menuOptionRemoveHide();
+        }
         return true;
     }
 
@@ -262,6 +269,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectMainFeed() {
+        onMainFeed = true;
+        menuOptionRemoveHide();
         deleteCallback = null;
         selectedGroups = new HashSet<>(LocalGroupsManger.getInstance().getGroups());
         setActivityTitle(getResources().getString(R.string.main_feed));
@@ -270,6 +279,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectFeed(final String feed) {
+        onMainFeed = false;
+        menuOptionRemoveShow();
         deleteCallback = new Callback() {
             @Override
             public void run() {
@@ -289,6 +300,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void selectGroup(final String group, boolean refreshList) {
+        onMainFeed = false;
+        menuOptionRemoveShow();
         deleteCallback = new Callback() {
             @Override
             public void run() {
@@ -303,6 +316,18 @@ public class MainActivity extends AppCompatActivity {
         setActivityTitle(group);
         if (refreshList) {
             refreshPostList();
+        }
+    }
+
+    private void menuOptionRemoveHide() {
+        if (menu != null) {
+            menu.findItem(R.id.action_remove).setVisible(false);
+        }
+    }
+
+    private void menuOptionRemoveShow() {
+        if (menu != null) {
+            menu.findItem(R.id.action_remove).setVisible(true);
         }
     }
 

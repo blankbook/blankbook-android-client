@@ -33,5 +33,5 @@
     <string name="error_creating_group">error creating group</string>
     <string name="new_feed">New Feed</string>
     <string name="error_creating_feed">error creating feed</string>
-    <string name="delete">Delete</string>
+    <string name="remove">Remove</string>
 </resources>
