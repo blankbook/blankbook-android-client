@@ -5,23 +5,19 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.ScaleAnimation;
-import android.widget.TextView;
 
 import com.example.jacob.blankbookandroidclient.R;
 import com.example.jacob.blankbookandroidclient.api.models.Post;
 import com.example.jacob.blankbookandroidclient.managers.PostListManager;
+import com.example.jacob.blankbookandroidclient.viewholders.PostViewHolder;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-public class PostListRecyclerViewAdapter extends RecyclerView.Adapter<PostListRecyclerViewAdapter.ViewHolder> {
+public class PostListRecyclerViewAdapter extends RecyclerView.Adapter<PostViewHolder> {
     private PostListManager postListManager;
     private PostListManager.UpdateListener postListener;
     private boolean showGroupName = true;
+    private OnClickListener clickListener;
 
-    public PostListRecyclerViewAdapter(PostListManager postListManager) {
+    public PostListRecyclerViewAdapter(PostListManager postListManager, OnClickListener clickListener) {
         this.postListManager = postListManager;
         postListener = new PostListManager.UpdateListener() {
             @Override
@@ -31,6 +27,7 @@ public class PostListRecyclerViewAdapter extends RecyclerView.Adapter<PostListRe
             }
         };
         this.postListManager.addListener(postListener);
+        this.clickListener = clickListener;
     }
 
     public void setShowGroupName(boolean showGroupName) {
@@ -43,42 +40,18 @@ public class PostListRecyclerViewAdapter extends RecyclerView.Adapter<PostListRe
     }
 
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public PostViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.post_list_item, parent, false);
-        return new ViewHolder(view);
+                .inflate(R.layout.post_info, parent, false);
+        return new PostViewHolder(view, showGroupName, clickListener);
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(PostViewHolder holder, int position) {
         holder.setPost(postListManager.getPostList().get(position));
     }
 
-    class ViewHolder extends RecyclerView.ViewHolder {
-        @BindView(R.id.group_name)
-        TextView groupName;
-        @BindView(R.id.title)
-        TextView title;
-        @BindView(R.id.content)
-        TextView content;
-        @BindView(R.id.score)
-        TextView score;
-
-        ViewHolder(View view) {
-            super(view);
-            ButterKnife.bind(this, view);
-        }
-
-        void setPost(Post post) {
-            groupName.setText(post.GroupName);
-            title.setText(post.Title);
-            content.setText(post.Content);
-            score.setText(Integer.toString(post.Score));
-            if (showGroupName) {
-                groupName.setVisibility(View.VISIBLE);
-            } else {
-                groupName.setVisibility(View.GONE);
-            }
-        }
+    public interface OnClickListener {
+        void onClick(Post post, View view);
     }
 }

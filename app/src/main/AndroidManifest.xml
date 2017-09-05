@@ -23,6 +23,7 @@
         </activity>
         <activity android:name=".GroupCreationActivity" />
         <activity android:name=".FeedCreationActivity" />
+        <activity android:name=".PostActivity" />
     </application>
 
 </manifest>

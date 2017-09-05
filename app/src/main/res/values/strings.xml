@@ -34,4 +34,7 @@
     <string name="new_feed">New Feed</string>
     <string name="error_creating_feed">error creating feed</string>
     <string name="remove">Remove</string>
+    <string name="title_activity_post">PostActivity</string>
+    <string name="post_info_transition">PostInfoTransition</string>
+    <string name="fab_transition">FabTransition</string>
 </resources>

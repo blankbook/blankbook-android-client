@@ -1,12 +1,16 @@
 package com.example.jacob.blankbookandroidclient;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.util.Pair;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v4.view.GravityCompat;
@@ -14,10 +18,13 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.transition.Explode;
+import android.transition.Slide;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
@@ -25,11 +32,14 @@ import com.example.jacob.blankbookandroidclient.adapters.MainDrawerRecyclerViewA
 import com.example.jacob.blankbookandroidclient.adapters.PostListRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.animations.MainActivityAnimator;
 import com.example.jacob.blankbookandroidclient.api.models.Group;
+import com.example.jacob.blankbookandroidclient.api.models.Post;
 import com.example.jacob.blankbookandroidclient.managers.LocalGroupsManger;
 import com.example.jacob.blankbookandroidclient.managers.PostListManager;
 import com.example.jacob.blankbookandroidclient.utils.Callback;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import butterknife.BindView;
@@ -84,6 +94,8 @@ public class MainActivity extends AppCompatActivity {
         postListRefresh.setColorSchemeResources(R.color.accent, R.color.primary, R.color.primaryDark);
         animator = new MainActivityAnimator(this);
         animator.setupListeners();
+
+        postList.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
 
         setupDrawer();
         setupPostListRefresh();
@@ -164,8 +176,37 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupPostList() {
         postList.setLayoutManager(new LinearLayoutManager(postList.getContext()));
-        postList.setAdapter(new PostListRecyclerViewAdapter(postListManager));
+        postList.setAdapter(new PostListRecyclerViewAdapter(postListManager, new PostListRecyclerViewAdapter.OnClickListener() {
+            @Override
+            public void onClick(Post post, View view) {
+                goToPostActivity(post, view);
+            }
+        }));
         selectMainFeed();
+    }
+
+    private void goToPostActivity(Post post, View postView) {
+        Intent intent = new Intent(MainActivity.this, PostActivity.class);
+        intent.putExtra(PostActivity.POST_TAG, post);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            View statusBar = findViewById(android.R.id.statusBarBackground);
+            View navigationBar = findViewById(android.R.id.navigationBarBackground);
+
+            Pair[] pairs = {
+                    new Pair<>(postView, getResources().getString(R.string.post_info_transition)),
+                    new Pair<>(fab, getResources().getString(R.string.fab_transition)),
+                    new Pair<>(statusBar, Window.STATUS_BAR_BACKGROUND_TRANSITION_NAME),
+                    new Pair<>(navigationBar, Window.NAVIGATION_BAR_BACKGROUND_TRANSITION_NAME)
+            };
+
+            ActivityOptionsCompat options = ActivityOptionsCompat.
+                    makeSceneTransitionAnimation(MainActivity.this, pairs);
+
+            startActivity(intent, options.toBundle());
+        } else {
+            startActivity(intent);
+        }
     }
 
     private void setupDrawer() {

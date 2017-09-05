@@ -1,6 +1,8 @@
 package com.example.jacob.blankbookandroidclient.api.models;
 
-public class Post {
+import java.io.Serializable;
+
+public class Post implements Serializable {
     public long Rank;
     public long ID;
     public int Score;
