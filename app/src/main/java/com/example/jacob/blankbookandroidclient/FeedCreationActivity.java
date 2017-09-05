@@ -107,10 +107,6 @@ public class FeedCreationActivity extends AppCompatActivity {
     }
 
     private void save(Set<String> selectedGroups) {
-        Log.d("FeedCreation", "There are " + selectedGroups.size() + " selected groups");
-        for (String group : selectedGroups) {
-            Log.d("FeedCreation", "Group:" + group);
-        }
         String feedName = name.getText().toString();
         if (errorCheckName()) {
             LocalGroupsManger.getInstance().addFeed(feedName, selectedGroups);

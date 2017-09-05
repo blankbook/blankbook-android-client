@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.widget.LinearLayoutManager;
@@ -14,9 +13,6 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.view.animation.AlphaAnimation;
-import android.view.animation.Animation;
 import android.support.v7.widget.Toolbar;
 import android.view.Gravity;
 import android.view.Menu;
@@ -27,10 +23,11 @@ import android.widget.Toast;
 
 import com.example.jacob.blankbookandroidclient.adapters.MainDrawerRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.adapters.PostListRecyclerViewAdapter;
-import com.example.jacob.blankbookandroidclient.animations.WidthAnimation;
+import com.example.jacob.blankbookandroidclient.animations.MainActivityAnimator;
 import com.example.jacob.blankbookandroidclient.api.models.Group;
 import com.example.jacob.blankbookandroidclient.managers.LocalGroupsManger;
 import com.example.jacob.blankbookandroidclient.managers.PostListManager;
+import com.example.jacob.blankbookandroidclient.utils.Callback;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -59,13 +56,15 @@ public class MainActivity extends AppCompatActivity {
     public static final int GROUP_CREATION_ACTIVITY_ID = 0;
     public static final int FEED_CREATION_ACTIVITY_ID = 1;
 
+    private final long ACTIVITY_ENTRY_ANIMATION_TIME = 200;
+
+    private MainActivityAnimator animator;
     private Menu menu;
     private PostListManager postListManager;
     private LocalGroupsManger localGroupsManager;
     private MainDrawerRecyclerViewAdapter drawerAdapter;
     private ActionBar bar;
     private Set<String> selectedGroups = new HashSet<>();
-    private Set<Callback> runOnNextResume = new HashSet<>();
     private Callback deleteCallback;
     private boolean onMainFeed = false;
 
@@ -82,9 +81,12 @@ public class MainActivity extends AppCompatActivity {
         localGroupsManager = LocalGroupsManger.getInstance();
         localGroupsManager.init(this);
 
+        postListRefresh.setColorSchemeResources(R.color.accent, R.color.primary, R.color.primaryDark);
+        animator = new MainActivityAnimator(this);
+        animator.setupListeners();
+
         setupDrawer();
         setupPostListRefresh();
-        setupAnimations();
         setFabToComment();
         setupPostList();
     }
@@ -92,10 +94,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        for (Callback callback : runOnNextResume) {
-            callback.run();
+        if (animator.isDrawerExpanded()) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    animator.reverseExpandDrawerToClearScreen();
+                }
+            }, ACTIVITY_ENTRY_ANIMATION_TIME);
         }
-        runOnNextResume = new HashSet<>();
     }
 
     @Override
@@ -207,18 +213,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startActivityFromDrawer(final Class activityClass, final int activityId) {
-        runOnNextResume.add(new Callback() {
-            @Override
-            public void run() {
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        reverseAnimateFromDrawerToBlankScreen();
-                    }
-                }, getResources().getInteger(android.R.integer.config_shortAnimTime));
-            }
-        });
-        animateFromDrawerToBlankScreen(new Callback() {
+        animator.expandDrawerToClearScreen(new Callback() {
             @Override
             public void run() {
                 Intent intent = new Intent(MainActivity.this, activityClass);
@@ -245,22 +240,6 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
-    }
-
-    private void setupAnimations() {
-        postList.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                if (dy > 0) {
-                    fab.hide();
-                } else {
-                    fab.show();
-                }
-            }
-        });
-
-        postListRefresh.setColorSchemeResources(R.color.accent, R.color.primary, R.color.primaryDark);
     }
 
     public void onGroupSearchDialogResult(Group group) {
@@ -320,15 +299,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void menuOptionRemoveHide() {
-        if (menu != null) {
-            menu.findItem(R.id.action_remove).setVisible(false);
-        }
+        if (menu != null) { menu.findItem(R.id.action_remove).setVisible(false); }
     }
 
     private void menuOptionRemoveShow() {
-        if (menu != null) {
-            menu.findItem(R.id.action_remove).setVisible(true);
-        }
+        if (menu != null) { menu.findItem(R.id.action_remove).setVisible(true); }
     }
 
     private void refreshPostList() {
@@ -342,80 +317,20 @@ public class MainActivity extends AppCompatActivity {
             ((PostListRecyclerViewAdapter) postList.getAdapter()).setShowGroupName(true);
         }
 
-        final Animation fadeIn = new AlphaAnimation(0f, 1f);
-        fadeIn.setDuration(200);
-        final Animation fadeOut = new AlphaAnimation(1f, 0f);
-        fadeOut.setDuration(200);
-
-        postList.startAnimation(fadeOut);
-        postList.getAnimation().setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                // LOADING ICON
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
-        });
+        animator.animatePostListRefreshStateEnter();
 
         postListManager.updatePostList(selectedGroups, null, null, null, "rank", null, null, null,
                 new PostListManager.OnUpdate() {
                     @Override
                     public void onSuccess() {
-                        if (onUpdate != null) {
-                            onUpdate.onSuccess();
-                        }
-                        if (postList.isAnimating()) {
-                            postList.getAnimation().setAnimationListener(new Animation.AnimationListener() {
-                                @Override
-                                public void onAnimationStart(Animation animation) {
-                                }
-
-                                @Override
-                                public void onAnimationEnd(Animation animation) {
-                                    postList.getAdapter().notifyDataSetChanged();
-                                    postList.setAnimation(fadeIn);
-                                }
-
-                                @Override
-                                public void onAnimationRepeat(Animation animation) {
-                                }
-                            });
-                        } else {
-                            // LOADING ICON
-                            postList.setAnimation(fadeIn);
-                        }
+                        if (onUpdate != null) { onUpdate.onSuccess(); }
+                        animator.animatePostListRefreshStateExit();
                     }
 
                     @Override
                     public void onFailure() {
-                        postList.setVisibility(View.VISIBLE);
-                        if (onUpdate != null) {
-                            onUpdate.onFailure();
-                        }
-                        if (postList.isAnimating()) {
-                            postList.getAnimation().setAnimationListener(new Animation.AnimationListener() {
-                                @Override
-                                public void onAnimationStart(Animation animation) {
-                                }
-
-                                @Override
-                                public void onAnimationEnd(Animation animation) {
-                                    postList.setAnimation(fadeIn);
-                                }
-
-                                @Override
-                                public void onAnimationRepeat(Animation animation) {
-                                }
-                            });
-                        } else {
-                            postList.setAnimation(fadeIn);
-                        }
+                        if (onUpdate != null) { onUpdate.onFailure(); }
+                        animator.animatePostListRefreshStateExit();
                     }
                 });
     }
@@ -436,29 +351,12 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         final View title = toolbar.getChildAt(0);
-
-        AlphaAnimation fadeOut = new AlphaAnimation(1f, 0f);
-        fadeOut.setDuration(100);
-        fadeOut.setAnimationListener(new Animation.AnimationListener() {
+        animator.fadeTransitionViewProperties(title, new Callback() {
             @Override
-            public void onAnimationStart(Animation animation) {
-
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
+            public void run() {
                 bar.setTitle(newTitle);
-                AlphaAnimation fadeIn = new AlphaAnimation(0f, 1f);
-                fadeIn.setDuration(100);
-                title.startAnimation(fadeIn);
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-
             }
         });
-        title.startAnimation(fadeOut);
     }
 
     private void setFabToComment() {
@@ -481,63 +379,5 @@ public class MainActivity extends AppCompatActivity {
                 setFabToComment();
             }
         });
-    }
-
-    private void animateFromDrawerToBlankScreen(final Callback callback) {
-        final int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
-        Animation alphaAnimation = new AlphaAnimation(1f, 0f);
-        alphaAnimation.setDuration(shortAnimTime);
-        alphaAnimation.setFillAfter(true);
-        drawer.startAnimation(alphaAnimation);
-        Animation widthAnimation = new WidthAnimation(drawerWrapper, root.getWidth());
-        widthAnimation.setDuration(shortAnimTime);
-        widthAnimation.setInterpolator(new FastOutSlowInInterpolator());
-        widthAnimation.setFillAfter(true);
-        widthAnimation.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                callback.run();
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-
-            }
-        });
-        drawerWrapper.startAnimation(widthAnimation);
-    }
-
-    private void reverseAnimateFromDrawerToBlankScreen() {
-        final int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
-        Animation alphaAnimation = new AlphaAnimation(0f, 1f);
-        alphaAnimation.setFillAfter(true);
-        alphaAnimation.setDuration(shortAnimTime);
-        drawer.startAnimation(alphaAnimation);
-        Animation widthAnimation = new WidthAnimation(drawerWrapper, drawer.getWidth());
-        widthAnimation.setDuration(shortAnimTime);
-        widthAnimation.setFillAfter(true);
-        widthAnimation.setInterpolator(new FastOutSlowInInterpolator());
-        widthAnimation.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {}
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                root.closeDrawer(Gravity.START);
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {}
-        });
-        drawerWrapper.startAnimation(widthAnimation);
-    }
-
-    private interface Callback {
-        void run();
     }
 }
