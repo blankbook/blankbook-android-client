@@ -93,7 +93,6 @@ public class MainActivity extends AppCompatActivity {
         localGroupsManager = LocalGroupsManger.getInstance();
         localGroupsManager.init(this);
 
-        postListRefresh.setColorSchemeResources(R.color.accent, R.color.primary, R.color.primaryDark);
         animator = new MainActivityAnimator(this);
         animator.setupListeners();
 
@@ -267,6 +266,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupPostListRefresh() {
+        postListRefresh.setColorSchemeResources(R.color.accent, R.color.primary, R.color.primaryDark);
         postListRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {

@@ -7,51 +7,53 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.jacob.blankbookandroidclient.R;
+import com.example.jacob.blankbookandroidclient.api.RetrofitClient;
+import com.example.jacob.blankbookandroidclient.api.models.Comment;
 import com.example.jacob.blankbookandroidclient.api.models.Post;
 import com.example.jacob.blankbookandroidclient.managers.PostListManager;
 import com.example.jacob.blankbookandroidclient.viewholders.CommentViewHolder;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class CommentsRecyclerViewAdapter extends RecyclerView.Adapter<CommentViewHolder> {
-    private PostListManager postListManager;
-    private PostListManager.UpdateListener postListener;
-    private boolean showGroupName = true;
-    private OnClickListener clickListener;
+    private final Post post;
+    private List<Comment> rootComments = new ArrayList<>();
 
-    public CommentsRecyclerViewAdapter(PostListManager postListManager, OnClickListener clickListener) {
-        this.postListManager = postListManager;
-        postListener = new PostListManager.UpdateListener() {
-            @Override
-            public void onUpdate() {
-                Log.d("PostListRecyclerView", "got update");
-                CommentsRecyclerViewAdapter.this.notifyDataSetChanged();
-            }
-        };
-        this.postListManager.addListener(postListener);
-        this.clickListener = clickListener;
-    }
+    public CommentsRecyclerViewAdapter(Post post) {
+        this.post = post;
+        RetrofitClient.getInstance().getBlankBookAPI().getComments(post.ID, -1L, "rank")
+                .enqueue(new Callback<List<Comment>>() {
+                    @Override
+                    public void onResponse(Call<List<Comment>> call, Response<List<Comment>> response) {
+                        rootComments = response.body();
+                        notifyDataSetChanged();
+                    }
 
-    public void setShowGroupName(boolean showGroupName) {
-        this.showGroupName = showGroupName;
+                    @Override
+                    public void onFailure(Call<List<Comment>> call, Throwable t) {
+                    }
+                });
     }
 
     @Override
     public int getItemCount() {
-        return postListManager.getPostList().size();
+        return rootComments.size();
     }
 
     @Override
     public CommentViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.post_info, parent, false);
-        return new CommentViewHolder(view, showGroupName, clickListener);
+                .inflate(R.layout.comment_info, parent, false);
+        return new CommentViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(CommentViewHolder holder, int position) {
-        holder.setPost(postListManager.getPostList().get(position));
-    }
-
-    public interface OnClickListener {
-        void onClick(Post post, View view);
+        holder.setComment(rootComments.get(position));
     }
 }

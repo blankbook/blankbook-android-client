@@ -10,35 +10,7 @@
     android:id="@+id/post_info"
     android:transitionName="@string/post_info_transition">
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:layout_marginEnd="@dimen/md_margin"
-        android:orientation="vertical">
-
-        <Button
-            android:id="@+id/upvote_btn"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:layout_gravity="center_horizontal"
-            android:alpha="0.5"
-            android:background="@drawable/ic_up_caret" />
-
-        <TextView
-            android:id="@+id/score"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textAlignment="center" />
-
-        <Button
-            android:id="@+id/downvote_btn"
-            android:layout_width="25dp"
-            android:layout_height="25dp"
-            android:layout_gravity="center_horizontal"
-            android:alpha="0.5"
-            android:background="@drawable/ic_down_caret" />
-    </LinearLayout>
+    <include layout="@layout/voting_section" />
 
     <LinearLayout
         android:layout_width="match_parent"

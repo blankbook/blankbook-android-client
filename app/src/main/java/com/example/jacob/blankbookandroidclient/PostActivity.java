@@ -9,6 +9,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -20,8 +21,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.jacob.blankbookandroidclient.R;
+import com.example.jacob.blankbookandroidclient.adapters.CommentsRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.animations.ElevationAnimation;
 import com.example.jacob.blankbookandroidclient.api.models.Post;
+import com.example.jacob.blankbookandroidclient.managers.PostListManager;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -61,6 +64,8 @@ public class PostActivity extends AppCompatActivity {
         preventScreenFlash();
         elevatePostInfo();
         populatePost();
+        populatePostList();
+        setupCommentListRefresh();
         setupFab();
     }
 
@@ -108,6 +113,16 @@ public class PostActivity extends AppCompatActivity {
         content.setText(post.Content);
         score.setText(String.valueOf(post.Score));
     }
+
+    private void populatePostList() {
+        commentList.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        commentList.setAdapter(new CommentsRecyclerViewAdapter(post));
+    }
+
+    private void setupCommentListRefresh() {
+        commentListRefresh.setColorSchemeResources(R.color.accent, R.color.primary, R.color.primaryDark);
+    }
+
 
     private void setupFab() {
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
