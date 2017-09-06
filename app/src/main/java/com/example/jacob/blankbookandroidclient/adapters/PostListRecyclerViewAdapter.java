@@ -1,7 +1,6 @@
 package com.example.jacob.blankbookandroidclient.adapters;
 
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,20 +12,19 @@ import com.example.jacob.blankbookandroidclient.viewholders.PostViewHolder;
 
 public class PostListRecyclerViewAdapter extends RecyclerView.Adapter<PostViewHolder> {
     private PostListManager postListManager;
-    private PostListManager.UpdateListener postListener;
+    private PostListManager.UpdateListener updateListener;
     private boolean showGroupName = true;
     private OnClickListener clickListener;
 
     public PostListRecyclerViewAdapter(PostListManager postListManager, OnClickListener clickListener) {
         this.postListManager = postListManager;
-        postListener = new PostListManager.UpdateListener() {
+        updateListener = new PostListManager.UpdateListener() {
             @Override
             public void onUpdate() {
-                Log.d("PostListRecyclerView", "got update");
-                PostListRecyclerViewAdapter.this.notifyDataSetChanged();
+                notifyDataSetChanged();
             }
         };
-        this.postListManager.addListener(postListener);
+        this.postListManager.addListener(updateListener);
         this.clickListener = clickListener;
     }
 
@@ -49,6 +47,12 @@ public class PostListRecyclerViewAdapter extends RecyclerView.Adapter<PostViewHo
     @Override
     public void onBindViewHolder(PostViewHolder holder, int position) {
         holder.setPost(postListManager.getPostList().get(position));
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView);
+        postListManager.removeListener(updateListener);
     }
 
     public interface OnClickListener {

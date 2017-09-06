@@ -2,33 +2,26 @@ package com.example.jacob.blankbookandroidclient;
 
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.example.jacob.blankbookandroidclient.R;
-import com.example.jacob.blankbookandroidclient.adapters.CommentsRecyclerViewAdapter;
+import com.example.jacob.blankbookandroidclient.adapters.CommentListRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.animations.ElevationAnimation;
 import com.example.jacob.blankbookandroidclient.api.models.Post;
-import com.example.jacob.blankbookandroidclient.managers.PostListManager;
+import com.example.jacob.blankbookandroidclient.managers.CommentListManager;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 
 public class PostActivity extends AppCompatActivity {
     @BindView(R.id.fab)
@@ -51,6 +44,7 @@ public class PostActivity extends AppCompatActivity {
 
     public final static String POST_TAG = "post";
 
+    private CommentListManager commentListManager;
     private Post post;
 
     @Override
@@ -60,11 +54,12 @@ public class PostActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         post = (Post) getIntent().getSerializableExtra(POST_TAG);
+        commentListManager = new CommentListManager();
 
         preventScreenFlash();
         elevatePostInfo();
         populatePost();
-        populatePostList();
+        populateCommentList();
         setupCommentListRefresh();
         setupFab();
     }
@@ -114,15 +109,36 @@ public class PostActivity extends AppCompatActivity {
         score.setText(String.valueOf(post.Score));
     }
 
-    private void populatePostList() {
+    private void populateCommentList() {
+        updateCommentList(null);
+        commentList.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
         commentList.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-        commentList.setAdapter(new CommentsRecyclerViewAdapter(post));
+        commentList.setAdapter(new CommentListRecyclerViewAdapter(post, commentListManager));
     }
 
     private void setupCommentListRefresh() {
         commentListRefresh.setColorSchemeResources(R.color.accent, R.color.primary, R.color.primaryDark);
+        commentListRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                updateCommentList(new CommentListManager.OnUpdate() {
+                    @Override
+                    public void onSuccess() {
+                        commentListRefresh.setRefreshing(false);
+                    }
+
+                    @Override
+                    public void onFailure() {
+                        commentListRefresh.setRefreshing(false);
+                    }
+                });
+            }
+        });
     }
 
+    private void updateCommentList(CommentListManager.OnUpdate onUpdate) {
+        commentListManager.updateCommentList(post.ID, null, null, onUpdate);
+    }
 
     private void setupFab() {
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);

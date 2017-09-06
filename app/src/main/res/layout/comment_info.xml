@@ -2,20 +2,39 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="@dimen/sm_margin"
-    android:layout_marginBottom="1dp"
     android:background="@color/white"
-    android:orientation="horizontal"
-    android:padding="@dimen/sm_margin"
-    android:id="@+id/post_info">
+    android:orientation="vertical">
 
-    <include layout="@layout/voting_section" />
-
-    <TextView
-        android:id="@+id/content"
-        style="@style/light_text"
+    <LinearLayout
+        android:id="@+id/post_info"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ellipsize="start"
-        android:textSize="@dimen/md_font" />
+        android:orientation="horizontal">
+
+        <View
+            android:id="@+id/color"
+            android:layout_width="@dimen/sm_margin"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="@dimen/sm_margin" />
+
+        <include
+            layout="@layout/voting_section"
+            android:padding="@dimen/sm_margin"
+            android:paddingEnd="0dp"/>
+
+        <TextView
+            android:id="@+id/content"
+            style="@style/light_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="start"
+            android:padding="@dimen/md_margin"
+            android:textSize="@dimen/md_font" />
+    </LinearLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/replies"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/md_margin" />
 </LinearLayout>
