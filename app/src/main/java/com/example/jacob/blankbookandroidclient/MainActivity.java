@@ -25,11 +25,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
+import android.view.animation.Animation;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.example.jacob.blankbookandroidclient.adapters.MainDrawerRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.adapters.PostListRecyclerViewAdapter;
+import com.example.jacob.blankbookandroidclient.animations.ElevationAnimation;
 import com.example.jacob.blankbookandroidclient.animations.MainActivityAnimator;
 import com.example.jacob.blankbookandroidclient.api.models.Group;
 import com.example.jacob.blankbookandroidclient.api.models.Post;

@@ -1,21 +1,17 @@
 package com.example.jacob.blankbookandroidclient.viewholders;
 
-import android.os.Build;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
-import android.view.animation.Animation;
 import android.widget.TextView;
 
 import com.example.jacob.blankbookandroidclient.R;
-import com.example.jacob.blankbookandroidclient.adapters.PostListRecyclerViewAdapter;
-import com.example.jacob.blankbookandroidclient.animations.ElevationAnimation;
+import com.example.jacob.blankbookandroidclient.adapters.CommentsRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.api.models.Post;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class PostViewHolder extends RecyclerView.ViewHolder {
+public class CommentViewHolder extends RecyclerView.ViewHolder {
     @BindView(R.id.group_name)
     TextView groupName;
     @BindView(R.id.title)
@@ -26,10 +22,10 @@ public class PostViewHolder extends RecyclerView.ViewHolder {
     TextView score;
 
     private View view;
-    private PostListRecyclerViewAdapter.OnClickListener clickListener;
+    private CommentsRecyclerViewAdapter.OnClickListener clickListener;
     private boolean showGroupName;
 
-    public PostViewHolder(View view, boolean showGroupName, PostListRecyclerViewAdapter.OnClickListener clickListener) {
+    public CommentViewHolder(View view, boolean showGroupName, CommentsRecyclerViewAdapter.OnClickListener clickListener) {
         super(view);
         ButterKnife.bind(this, view);
         this.view = view;

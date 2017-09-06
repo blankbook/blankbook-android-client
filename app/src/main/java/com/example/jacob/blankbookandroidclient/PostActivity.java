@@ -2,6 +2,7 @@ package com.example.jacob.blankbookandroidclient;
 
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -13,18 +14,20 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
+import android.view.animation.Animation;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.jacob.blankbookandroidclient.R;
+import com.example.jacob.blankbookandroidclient.animations.ElevationAnimation;
 import com.example.jacob.blankbookandroidclient.api.models.Post;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
 public class PostActivity extends AppCompatActivity {
-    @BindView(R.id.toolbar)
-    Toolbar toolbar;
     @BindView(R.id.fab)
     FloatingActionButton fab;
     @BindView(R.id.comment_list)
@@ -39,6 +42,8 @@ public class PostActivity extends AppCompatActivity {
     TextView content;
     @BindView(R.id.score)
     TextView score;
+    @BindView(R.id.post_info)
+    LinearLayout postInfo;
 
 
     public final static String POST_TAG = "post";
@@ -51,14 +56,25 @@ public class PostActivity extends AppCompatActivity {
         setContentView(R.layout.activity_post);
         ButterKnife.bind(this);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
         post = (Post) getIntent().getSerializableExtra(POST_TAG);
 
         preventScreenFlash();
+        elevatePostInfo();
         populatePost();
         setupFab();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Animation animation = new ElevationAnimation(postInfo, 10, 0);
+            animation.setDuration(getResources().getInteger(android.R.integer.config_shortAnimTime));
+            animation.setFillAfter(true);
+            postInfo.startAnimation(animation);
+            finishAfterTransition();
+        } else {
+            finish();
+        }
     }
 
     private void preventScreenFlash() {
@@ -79,6 +95,13 @@ public class PostActivity extends AppCompatActivity {
         }
     }
 
+    private void elevatePostInfo() {
+        Animation animation = new ElevationAnimation(postInfo, 0, 10);
+        animation.setDuration(getResources().getInteger(android.R.integer.config_shortAnimTime));
+        animation.setFillAfter(true);
+        postInfo.startAnimation(animation);
+    }
+
     private void populatePost() {
         groupName.setText(post.GroupName);
         title.setText(post.Title);
@@ -96,6 +119,4 @@ public class PostActivity extends AppCompatActivity {
             }
         });
     }
-
-    // TO FINISH: call finishAfterTransition()
 }
