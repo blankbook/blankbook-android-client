@@ -7,18 +7,14 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.FrameLayout;
 
-import com.example.jacob.blankbookandroidclient.MainActivity;
 import com.example.jacob.blankbookandroidclient.R;
-import com.example.jacob.blankbookandroidclient.adapters.PostListRecyclerViewAdapter;
-import com.example.jacob.blankbookandroidclient.managers.PostListManager;
-import com.example.jacob.blankbookandroidclient.utils.Callback;
+import com.example.jacob.blankbookandroidclient.utils.SimpleCallback;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -61,7 +57,7 @@ public class MainActivityAnimator {
         });
     }
 
-    public void expandDrawerToClearScreen(final Callback callback) {
+    public void expandDrawerToClearScreen(final SimpleCallback callback) {
         Animation alphaAnimation = new AlphaAnimation(1f, 0f);
         alphaAnimation.setDuration(shortAnimTime);
         alphaAnimation.setFillAfter(true);
@@ -158,7 +154,7 @@ public class MainActivityAnimator {
         }
     }
 
-    public void fadeTransitionViewProperties(final View view, final Callback transition) {
+    public void fadeTransitionViewProperties(final View view, final SimpleCallback transition) {
         final Animation fadeOut = new AlphaAnimation(1f, 0f);
         final Animation fadeIn = new AlphaAnimation(0f, 1f);
         fadeOut.setDuration(shortAnimTime / 2);

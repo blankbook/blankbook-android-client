@@ -42,12 +42,12 @@
     <style name="light_text">
         <item name="android:textColor">#000</item>
         <item name="android:fontFamily">@string/font_family_medium</item>
-        <item name="android:alpha">0.54</item>
+        <item name="android:alpha">@dimen/md_alpha</item>
     </style>
 
     <style name="medium_text">
         <item name="android:textColor">#000</item>
         <item name="android:fontFamily">@string/font_family_medium</item>
-        <item name="android:alpha">0.87</item>
+        <item name="android:alpha">@dimen/hi_alpha</item>
     </style>
 </resources>

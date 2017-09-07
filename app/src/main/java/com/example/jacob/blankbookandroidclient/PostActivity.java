@@ -2,6 +2,7 @@ package com.example.jacob.blankbookandroidclient;
 
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.widget.SwipeRefreshLayout;
@@ -9,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
@@ -17,11 +19,18 @@ import android.widget.TextView;
 
 import com.example.jacob.blankbookandroidclient.adapters.CommentListRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.animations.ElevationAnimation;
+import com.example.jacob.blankbookandroidclient.api.RetrofitClient;
+import com.example.jacob.blankbookandroidclient.api.models.Comment;
 import com.example.jacob.blankbookandroidclient.api.models.Post;
 import com.example.jacob.blankbookandroidclient.managers.CommentListManager;
+import com.example.jacob.blankbookandroidclient.utils.SimpleCallback;
+import com.example.jacob.blankbookandroidclient.viewholders.CommentViewHolder;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class PostActivity extends AppCompatActivity {
     @BindView(R.id.fab)
@@ -113,7 +122,12 @@ public class PostActivity extends AppCompatActivity {
         updateCommentList(null);
         commentList.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
         commentList.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-        commentList.setAdapter(new CommentListRecyclerViewAdapter(post, commentListManager));
+        commentList.setAdapter(new CommentListRecyclerViewAdapter(post, commentListManager, new CommentViewHolder.OnReplyClickListener() {
+            @Override
+            public void onReplyClicked(final Comment parentComment, final SimpleCallback onReplyAdded) {
+                addReplyThroughDialog(parentComment, onReplyAdded);
+            }
+        }));
     }
 
     private void setupCommentListRefresh() {
@@ -141,7 +155,6 @@ public class PostActivity extends AppCompatActivity {
     }
 
     private void setupFab() {
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -149,5 +162,79 @@ public class PostActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
+        commentList.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if (dy > 0) {
+                    fab.hide();
+                } else {
+                    fab.show();
+                }
+            }
+        });
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                addNewCommentThroughDialog();
+            }
+        });
+    }
+
+    private void addReplyThroughDialog(final Comment parentComment, final SimpleCallback onReplyAdded) {
+        final CommentDialogFragment dialogFragment = new CommentDialogFragment();
+        dialogFragment.setOnResult(new OnCommentDialogResultListener() {
+            @Override
+            public void onAccept(String content) {
+                Comment newComment = addComment(parentComment.ParentPost, parentComment.ID, content);
+                parentComment.Replies.add(newComment);
+                if (onReplyAdded != null) {
+                    onReplyAdded.run();
+                }
+                dialogFragment.dismiss();
+            }
+
+            @Override
+            public void onCancel() {
+                dialogFragment.dismiss();
+            }
+        });
+        dialogFragment.show(getFragmentManager(), "tag");
+    }
+
+    private void addNewCommentThroughDialog() {
+        final CommentDialogFragment dialogFragment = new CommentDialogFragment();
+        dialogFragment.setOnResult(new OnCommentDialogResultListener() {
+            @Override
+            public void onAccept(String content) {
+                Comment newComment = addComment(post.ID, null, content);
+                commentListManager.addCommentToList(newComment);
+                dialogFragment.dismiss();
+            }
+
+            @Override
+            public void onCancel() {
+                dialogFragment.dismiss();
+            }
+        });
+        dialogFragment.show(getFragmentManager(), "tag");
+    }
+
+    private Comment addComment(Long parentPost, @Nullable Long parentComment, String content) {
+        Comment newComment = new Comment();
+        // TODO: get contributor ID and use that to get color, put in some sort of manager
+        newComment.ParentPost = parentPost;
+        if (parentComment != null) {
+            newComment.ParentComment = parentComment;
+        }
+        newComment.Content = content;
+        newComment.Color = "639df9";
+        RetrofitClient.getInstance().getBlankBookAPI().postPostComment(newComment); // TODO: Handle failures by removing the comment, showing an error
+        return newComment;
+    }
+
+    public interface OnCommentDialogResultListener {
+        void onAccept(String content);
+        void onCancel();
     }
 }

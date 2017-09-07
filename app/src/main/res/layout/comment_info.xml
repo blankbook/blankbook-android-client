@@ -6,31 +6,55 @@
     android:orientation="vertical">
 
     <LinearLayout
-        android:id="@+id/post_info"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_height="wrap_content">
 
         <View
             android:id="@+id/color"
             android:layout_width="@dimen/sm_margin"
             android:layout_height="match_parent"
-            android:layout_marginEnd="@dimen/sm_margin" />
+            android:background="@color/black" />
 
-        <include
-            layout="@layout/voting_section"
-            android:padding="@dimen/sm_margin"
-            android:paddingEnd="0dp"/>
-
-        <TextView
-            android:id="@+id/content"
-            style="@style/light_text"
+        <RelativeLayout
+            android:id="@+id/post_info"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:ellipsize="start"
-            android:padding="@dimen/md_margin"
-            android:textSize="@dimen/md_font" />
+            android:orientation="horizontal">
+
+            <include
+                android:id="@+id/voting_section"
+                layout="@layout/voting_section"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top"
+                android:layout_marginStart="@dimen/sm_margin"
+                android:padding="@dimen/sm_margin"
+                android:paddingEnd="0dp" />
+
+            <TextView
+                android:id="@+id/content"
+                style="@style/light_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:layout_toEndOf="@id/voting_section"
+                android:ellipsize="start"
+                android:padding="@dimen/md_margin"
+                android:textSize="@dimen/md_font" />
+
+            <Button
+                android:id="@+id/reply"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_alignParentBottom="true"
+                android:layout_toEndOf="@id/voting_section"
+                android:alpha="@dimen/lw_alpha"
+                android:background="@drawable/ic_reply"
+                android:scaleX="0.5"
+                android:scaleY="0.5" />
+        </RelativeLayout>
     </LinearLayout>
+
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/replies"

@@ -1,5 +1,5 @@
 package com.example.jacob.blankbookandroidclient.utils;
 
-public interface Callback {
+public interface SimpleCallback {
     void run();
 }

@@ -55,6 +55,11 @@ public class CommentListManager {
                 });
     }
 
+    public void addCommentToList(Comment comment) {
+        comments.add(comment);
+        notifyListeners();
+    }
+
     public void emptyCommentList() {
         lastCall.cancel();
         comments = new ArrayList<>();

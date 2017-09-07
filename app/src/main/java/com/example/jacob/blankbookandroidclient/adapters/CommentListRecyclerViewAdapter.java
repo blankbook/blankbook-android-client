@@ -15,10 +15,12 @@ public class CommentListRecyclerViewAdapter extends RecyclerView.Adapter<Comment
     private final Post post;
     private final CommentListManager commentListManager;
     private final CommentListManager.UpdateListener updateListener;
+    private final CommentViewHolder.OnReplyClickListener replyClickedListener;
 
-    public CommentListRecyclerViewAdapter(Post post, CommentListManager commentListManager) {
+    public CommentListRecyclerViewAdapter(Post post, CommentListManager commentListManager, CommentViewHolder.OnReplyClickListener replyClickedListener) {
         this.post = post;
         this.commentListManager = commentListManager;
+        this.replyClickedListener = replyClickedListener;
         updateListener = new CommentListManager.UpdateListener() {
             @Override
             public void onUpdate() {
@@ -37,7 +39,7 @@ public class CommentListRecyclerViewAdapter extends RecyclerView.Adapter<Comment
     public CommentViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.comment_info, parent, false);
-        return new CommentViewHolder(view);
+        return new CommentViewHolder(view, replyClickedListener);
     }
 
     @Override

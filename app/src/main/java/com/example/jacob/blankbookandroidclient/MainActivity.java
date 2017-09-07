@@ -18,30 +18,24 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.transition.Explode;
-import android.transition.Slide;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
-import android.view.animation.Animation;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.example.jacob.blankbookandroidclient.adapters.MainDrawerRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.adapters.PostListRecyclerViewAdapter;
-import com.example.jacob.blankbookandroidclient.animations.ElevationAnimation;
 import com.example.jacob.blankbookandroidclient.animations.MainActivityAnimator;
 import com.example.jacob.blankbookandroidclient.api.models.Group;
 import com.example.jacob.blankbookandroidclient.api.models.Post;
 import com.example.jacob.blankbookandroidclient.managers.LocalGroupsManger;
 import com.example.jacob.blankbookandroidclient.managers.PostListManager;
-import com.example.jacob.blankbookandroidclient.utils.Callback;
+import com.example.jacob.blankbookandroidclient.utils.SimpleCallback;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import butterknife.BindView;
@@ -77,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
     private MainDrawerRecyclerViewAdapter drawerAdapter;
     private ActionBar bar;
     private Set<String> selectedGroups = new HashSet<>();
-    private Callback deleteCallback;
+    private SimpleCallback deleteCallback;
     private boolean onMainFeed = false;
 
     @Override
@@ -255,7 +249,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startActivityFromDrawer(final Class activityClass, final int activityId) {
-        animator.expandDrawerToClearScreen(new Callback() {
+        animator.expandDrawerToClearScreen(new SimpleCallback() {
             @Override
             public void run() {
                 Intent intent = new Intent(MainActivity.this, activityClass);
@@ -303,7 +297,7 @@ public class MainActivity extends AppCompatActivity {
     private void selectFeed(final String feed) {
         onMainFeed = false;
         menuOptionRemoveShow();
-        deleteCallback = new Callback() {
+        deleteCallback = new SimpleCallback() {
             @Override
             public void run() {
                 LocalGroupsManger.getInstance().removeFeed(feed);
@@ -324,7 +318,7 @@ public class MainActivity extends AppCompatActivity {
     private void selectGroup(final String group, boolean refreshList) {
         onMainFeed = false;
         menuOptionRemoveShow();
-        deleteCallback = new Callback() {
+        deleteCallback = new SimpleCallback() {
             @Override
             public void run() {
                 LocalGroupsManger.getInstance().removeGroup(group);
@@ -394,7 +388,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         final View title = toolbar.getChildAt(0);
-        animator.fadeTransitionViewProperties(title, new Callback() {
+        animator.fadeTransitionViewProperties(title, new SimpleCallback() {
             @Override
             public void run() {
                 bar.setTitle(newTitle);

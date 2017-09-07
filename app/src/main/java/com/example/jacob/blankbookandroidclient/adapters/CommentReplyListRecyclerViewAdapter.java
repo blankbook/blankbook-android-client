@@ -15,9 +15,11 @@ import java.util.List;
 
 public class CommentReplyListRecyclerViewAdapter extends RecyclerView.Adapter<CommentViewHolder> {
     private final List<Comment> comments;
+    private final CommentViewHolder.OnReplyClickListener replyClickListener;
 
-    public CommentReplyListRecyclerViewAdapter(List<Comment> comments) {
+    public CommentReplyListRecyclerViewAdapter(List<Comment> comments, CommentViewHolder.OnReplyClickListener replyClickedListener) {
         this.comments = comments;
+        this.replyClickListener = replyClickedListener;
     }
 
     @Override
@@ -29,7 +31,7 @@ public class CommentReplyListRecyclerViewAdapter extends RecyclerView.Adapter<Co
     public CommentViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.comment_info, parent, false);
-        return new CommentViewHolder(view);
+        return new CommentViewHolder(view, replyClickListener);
     }
 
     @Override

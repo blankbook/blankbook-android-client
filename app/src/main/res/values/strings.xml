@@ -37,4 +37,6 @@
     <string name="title_activity_post">PostActivity</string>
     <string name="post_info_transition">PostInfoTransition</string>
     <string name="fab_transition">FabTransition</string>
+    <string name="cancel">Cancel</string>
+    <string name="accept">Accept</string>
 </resources>
