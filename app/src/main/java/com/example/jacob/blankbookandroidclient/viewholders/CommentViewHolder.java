@@ -9,7 +9,7 @@ import android.widget.TextView;
 
 import com.example.jacob.blankbookandroidclient.R;
 import com.example.jacob.blankbookandroidclient.adapters.CommentReplyListRecyclerViewAdapter;
-import com.example.jacob.blankbookandroidclient.api.models.Comment;
+import com.example.jacob.blankbookandroidclient.utils.AugmentedComment;
 import com.example.jacob.blankbookandroidclient.utils.SimpleCallback;
 
 import butterknife.BindView;
@@ -41,7 +41,7 @@ public class CommentViewHolder extends RecyclerView.ViewHolder {
         this.replyClickListener = replyClickedListener;
     }
 
-    public void setComment(final Comment comment) {
+    public void setComment(final AugmentedComment comment) {
         content.setText(comment.Content);
         score.setText(String.valueOf(comment.Score));
         replies.setLayoutManager(new LinearLayoutManager(view.getContext()));
@@ -53,17 +53,20 @@ public class CommentViewHolder extends RecyclerView.ViewHolder {
         reply.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                replyClickListener.onReplyClicked(comment, new SimpleCallback() {
-                    @Override
-                    public void run() {
-                        replies.getAdapter().notifyDataSetChanged();
-                    }
-                });
+                replyClickListener.onReplyClicked(comment);
+            }
+        });
+        comment.setUpdateListener(new SimpleCallback() {
+            @Override
+            public void run() {
+                content.setText(comment.Content);
+                score.setText(String.valueOf(comment.Score));
+                replies.getAdapter().notifyDataSetChanged();
             }
         });
     }
 
     public interface OnReplyClickListener {
-        void onReplyClicked(Comment parentComment, SimpleCallback onReplyAdded);
+        void onReplyClicked(AugmentedComment parentComment);
     }
 }

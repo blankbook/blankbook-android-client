@@ -1,7 +1,6 @@
 package com.example.jacob.blankbookandroidclient.adapters;
 
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,7 +26,7 @@ public class CommentListRecyclerViewAdapter extends RecyclerView.Adapter<Comment
                 notifyDataSetChanged();
             }
         };
-        this.commentListManager.addListener(updateListener);
+        this.commentListManager.addRootCommentsUpdateListener(updateListener);
     }
 
     @Override
@@ -50,6 +49,6 @@ public class CommentListRecyclerViewAdapter extends RecyclerView.Adapter<Comment
     @Override
     public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
         super.onDetachedFromRecyclerView(recyclerView);
-        commentListManager.removeListener(updateListener);
+        commentListManager.removeRootCommentsUpdateListener(updateListener);
     }
 }

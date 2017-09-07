@@ -12,5 +12,4 @@ public class Comment {
     public String EditContent;
     public long Time;
     public String Color;
-    public List<Comment> Replies = new ArrayList<>();
 }

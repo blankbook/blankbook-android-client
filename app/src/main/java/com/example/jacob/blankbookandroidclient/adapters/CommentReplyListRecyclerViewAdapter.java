@@ -6,18 +6,16 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.jacob.blankbookandroidclient.R;
-import com.example.jacob.blankbookandroidclient.api.models.Comment;
-import com.example.jacob.blankbookandroidclient.api.models.Post;
-import com.example.jacob.blankbookandroidclient.managers.CommentListManager;
+import com.example.jacob.blankbookandroidclient.utils.AugmentedComment;
 import com.example.jacob.blankbookandroidclient.viewholders.CommentViewHolder;
 
 import java.util.List;
 
 public class CommentReplyListRecyclerViewAdapter extends RecyclerView.Adapter<CommentViewHolder> {
-    private final List<Comment> comments;
+    private final List<AugmentedComment> comments;
     private final CommentViewHolder.OnReplyClickListener replyClickListener;
 
-    public CommentReplyListRecyclerViewAdapter(List<Comment> comments, CommentViewHolder.OnReplyClickListener replyClickedListener) {
+    public CommentReplyListRecyclerViewAdapter(List<AugmentedComment> comments, CommentViewHolder.OnReplyClickListener replyClickedListener) {
         this.comments = comments;
         this.replyClickListener = replyClickedListener;
     }

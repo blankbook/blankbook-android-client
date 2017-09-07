@@ -38,5 +38,8 @@
     <string name="post_info_transition">PostInfoTransition</string>
     <string name="fab_transition">FabTransition</string>
     <string name="cancel">Cancel</string>
+    <string name="copy_content">Copy Content</string>
     <string name="accept">Accept</string>
+    <string name="retry">Retry</string>
+    <string name="error_adding_comment">Error Adding Commment</string>
 </resources>

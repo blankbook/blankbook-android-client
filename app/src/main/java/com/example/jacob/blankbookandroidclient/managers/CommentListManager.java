@@ -1,22 +1,15 @@
 package com.example.jacob.blankbookandroidclient.managers;
 
 import android.support.annotation.NonNull;
-import android.util.Log;
 import android.util.LongSparseArray;
-import android.util.SparseArray;
 
 import com.example.jacob.blankbookandroidclient.api.BlankBookAPI;
 import com.example.jacob.blankbookandroidclient.api.RetrofitClient;
 import com.example.jacob.blankbookandroidclient.api.models.Comment;
-import com.example.jacob.blankbookandroidclient.api.models.Post;
-import com.example.jacob.blankbookandroidclient.api.models.RankedPosts;
+import com.example.jacob.blankbookandroidclient.utils.AugmentedComment;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Queue;
-import java.util.Set;
 import java.util.Stack;
 
 import retrofit2.Call;
@@ -24,7 +17,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class CommentListManager {
-    private List<Comment> comments = new ArrayList<>();
+    private List<AugmentedComment> comments = new ArrayList<>();
     private final BlankBookAPI api;
     private List<UpdateListener> listeners = new ArrayList<>();
     private Call<List<Comment>> lastCall;
@@ -55,9 +48,25 @@ public class CommentListManager {
                 });
     }
 
-    public void addCommentToList(Comment comment) {
-        comments.add(comment);
+    public void addCommentToList(AugmentedComment comment) {
+        comments.add(0, comment);
         notifyListeners();
+    }
+
+    public void removeCommentFromList(AugmentedComment comment) {
+        comments.remove(comment);
+        notifyListeners();
+    }
+
+
+    public void addReply(AugmentedComment parent, AugmentedComment reply) {
+        parent.Replies.add(0, reply);
+        parent.onUpdate();
+    }
+
+    public void removeReply(AugmentedComment parent, AugmentedComment reply) {
+        parent.Replies.remove(reply);
+        parent.onUpdate();
     }
 
     public void emptyCommentList() {
@@ -66,15 +75,15 @@ public class CommentListManager {
         notifyListeners();
     }
 
-    public List<Comment> getCommentList() {
+    public List<AugmentedComment> getCommentList() {
         return comments;
     }
 
-    public void addListener(UpdateListener listener) {
+    public void addRootCommentsUpdateListener(UpdateListener listener) {
         listeners.add(listener);
     }
 
-    public void removeListener(UpdateListener listener) {
+    public void removeRootCommentsUpdateListener(UpdateListener listener) {
         listeners.remove(listener);
     }
 
@@ -84,25 +93,27 @@ public class CommentListManager {
         }
     }
 
-    private List<Comment> unflattenCommentList(List<Comment> comments) {
-        LongSparseArray<List<Comment>> commentReplies = new LongSparseArray<>();
+    private List<AugmentedComment> unflattenCommentList(List<Comment> comments) {
+        LongSparseArray<List<AugmentedComment>> commentReplies = new LongSparseArray<>();
         for (Comment comment : comments) {
             if (commentReplies.get(comment.ParentComment) == null) {
-                commentReplies.put(comment.ParentComment, new ArrayList<Comment>());
+                commentReplies.put(comment.ParentComment, new ArrayList<AugmentedComment>());
             }
-            commentReplies.get(comment.ParentComment).add(comment);
+            AugmentedComment augmentedComment = new AugmentedComment(comment);
+            augmentedComment.Replies = new ArrayList<>();
+            commentReplies.get(comment.ParentComment).add(augmentedComment);
         }
 
-        List<Comment> unflattenedComments = commentReplies.get(-1L);
+        List<AugmentedComment> unflattenedComments = commentReplies.get(-1L);
         if (unflattenedComments == null) {
             return new ArrayList<>();
         }
-        Stack<Comment> commentsThatNeedReplies = new Stack<>();
+        Stack<AugmentedComment> commentsThatNeedReplies = new Stack<>();
         commentsThatNeedReplies.addAll(unflattenedComments);
 
         while (!commentsThatNeedReplies.isEmpty()) {
-            Comment commentToAddTo = commentsThatNeedReplies.pop();
-            final List<Comment> replies = commentReplies.get(commentToAddTo.ID);
+            AugmentedComment commentToAddTo = commentsThatNeedReplies.pop();
+            final List<AugmentedComment> replies = commentReplies.get(commentToAddTo.ID);
             if (replies != null) {
                 commentToAddTo.Replies = replies;
                 commentsThatNeedReplies.addAll(replies);
@@ -120,4 +131,5 @@ public class CommentListManager {
         void onSuccess();
         void onFailure();
     }
+
 }

@@ -1,29 +1,32 @@
 package com.example.jacob.blankbookandroidclient;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.DialogInterface;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.jacob.blankbookandroidclient.adapters.CommentListRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.animations.ElevationAnimation;
 import com.example.jacob.blankbookandroidclient.api.RetrofitClient;
-import com.example.jacob.blankbookandroidclient.api.models.Comment;
 import com.example.jacob.blankbookandroidclient.api.models.Post;
 import com.example.jacob.blankbookandroidclient.managers.CommentListManager;
-import com.example.jacob.blankbookandroidclient.utils.SimpleCallback;
+import com.example.jacob.blankbookandroidclient.utils.AugmentedComment;
 import com.example.jacob.blankbookandroidclient.viewholders.CommentViewHolder;
 
 import butterknife.BindView;
@@ -124,8 +127,8 @@ public class PostActivity extends AppCompatActivity {
         commentList.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         commentList.setAdapter(new CommentListRecyclerViewAdapter(post, commentListManager, new CommentViewHolder.OnReplyClickListener() {
             @Override
-            public void onReplyClicked(final Comment parentComment, final SimpleCallback onReplyAdded) {
-                addReplyThroughDialog(parentComment, onReplyAdded);
+            public void onReplyClicked(final AugmentedComment parentComment) {
+                addCommentThroughDialog(parentComment);
             }
         }));
     }
@@ -176,21 +179,17 @@ public class PostActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                addNewCommentThroughDialog();
+                addCommentThroughDialog(null);
             }
         });
     }
 
-    private void addReplyThroughDialog(final Comment parentComment, final SimpleCallback onReplyAdded) {
+    private void addCommentThroughDialog(final AugmentedComment parentComment) {
         final CommentDialogFragment dialogFragment = new CommentDialogFragment();
         dialogFragment.setOnResult(new OnCommentDialogResultListener() {
             @Override
             public void onAccept(String content) {
-                Comment newComment = addComment(parentComment.ParentPost, parentComment.ID, content);
-                parentComment.Replies.add(newComment);
-                if (onReplyAdded != null) {
-                    onReplyAdded.run();
-                }
+                addComment(parentComment, content);
                 dialogFragment.dismiss();
             }
 
@@ -202,39 +201,72 @@ public class PostActivity extends AppCompatActivity {
         dialogFragment.show(getFragmentManager(), "tag");
     }
 
-    private void addNewCommentThroughDialog() {
-        final CommentDialogFragment dialogFragment = new CommentDialogFragment();
-        dialogFragment.setOnResult(new OnCommentDialogResultListener() {
-            @Override
-            public void onAccept(String content) {
-                Comment newComment = addComment(post.ID, null, content);
-                commentListManager.addCommentToList(newComment);
-                dialogFragment.dismiss();
-            }
-
-            @Override
-            public void onCancel() {
-                dialogFragment.dismiss();
-            }
-        });
-        dialogFragment.show(getFragmentManager(), "tag");
-    }
-
-    private Comment addComment(Long parentPost, @Nullable Long parentComment, String content) {
-        Comment newComment = new Comment();
+    private void addComment(@Nullable final AugmentedComment parentComment, final String content) {
+        final AugmentedComment newComment = new AugmentedComment();
         // TODO: get contributor ID and use that to get color, put in some sort of manager
-        newComment.ParentPost = parentPost;
-        if (parentComment != null) {
-            newComment.ParentComment = parentComment;
-        }
+        newComment.ParentPost = post.ID;
         newComment.Content = content;
         newComment.Color = "639df9";
-        RetrofitClient.getInstance().getBlankBookAPI().postPostComment(newComment); // TODO: Handle failures by removing the comment, showing an error
-        return newComment;
+
+        if (parentComment == null) {
+            newComment.ParentComment = -1;
+        } else {
+            newComment.ParentComment = parentComment.ID;
+        }
+        addComment(parentComment, newComment);
+    }
+
+    private void addComment(@Nullable final AugmentedComment parentComment, final AugmentedComment newComment) {
+        if (parentComment == null) {
+            commentListManager.addCommentToList(newComment);
+        } else {
+            commentListManager.addReply(parentComment, newComment);
+        }
+        RetrofitClient.getInstance().getBlankBookAPI().postPostComment(newComment)
+                .enqueue(new Callback<Void>() {
+                    @Override
+                    public void onResponse(Call<Void> call, Response<Void> response) {
+                        if (response.code() != 200) {
+                            onCommentAddFailure(parentComment, newComment);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Void> call, Throwable t) {
+                        onCommentAddFailure(parentComment, newComment);
+                    }
+                });
+    }
+
+    private void onCommentAddFailure(final AugmentedComment parentComment, final AugmentedComment newComment) {
+        new AlertDialog.Builder(this)
+                .setMessage(getResources().getString(R.string.error_adding_comment))
+                .setPositiveButton(R.string.retry, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        addComment(parentComment, newComment);
+                    }
+                })
+                .setNeutralButton(R.string.copy_content, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                        ClipData clip = ClipData.newPlainText("Comment", newComment.Content);
+                        clipboard.setPrimaryClip(clip);
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+
+        if (parentComment == null) {
+            commentListManager.removeCommentFromList(newComment);
+        } else {
+            commentListManager.removeReply(parentComment, newComment);
+        }
     }
 
     public interface OnCommentDialogResultListener {
         void onAccept(String content);
+
         void onCancel();
     }
 }
