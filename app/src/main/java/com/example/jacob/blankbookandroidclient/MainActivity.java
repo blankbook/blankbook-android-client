@@ -177,6 +177,8 @@ public class MainActivity extends AppCompatActivity {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.sort_spinner_list_item, SORT_OPTIONS);
         adapter.setDropDownViewResource(R.layout.sort_spinner_list_item);
         filterSpinner.setAdapter(adapter);
+        filterSpinner.setSelection(0);
+        sortingMethod = SORT_OPTIONS[0];
 
         filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override

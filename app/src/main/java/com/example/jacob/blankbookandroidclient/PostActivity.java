@@ -14,11 +14,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.example.jacob.blankbookandroidclient.adapters.CommentListRecyclerViewAdapter;
@@ -54,12 +60,17 @@ public class PostActivity extends AppCompatActivity {
     TextView score;
     @BindView(R.id.post_info)
     LinearLayout postInfo;
+    @BindView(R.id.bottomtoolbar)
+    Toolbar bottomToolbar;
 
 
     public final static String POST_TAG = "post";
 
+    private final String[] SORT_OPTIONS = {"rank", "time"};
+
     private CommentListManager commentListManager;
     private Post post;
+    private String sortingMethod = SORT_OPTIONS[0];
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +81,7 @@ public class PostActivity extends AppCompatActivity {
         post = (Post) getIntent().getSerializableExtra(POST_TAG);
         commentListManager = new CommentListManager();
 
+        setupBottomToolbar();
         preventScreenFlash();
         elevatePostInfo();
         populatePost();
@@ -88,6 +100,38 @@ public class PostActivity extends AppCompatActivity {
             finishAfterTransition();
         } else {
             finish();
+        }
+    }
+
+    private void setupBottomToolbar() {
+        Menu bottomMenu = bottomToolbar.getMenu();
+        getMenuInflater().inflate(R.menu.sorting, bottomMenu);
+        MenuItem filterItem = bottomMenu.findItem(R.id.filter_spinner);
+        Spinner filterSpinner = (Spinner) filterItem.getActionView();
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.sort_spinner_list_item_black, SORT_OPTIONS);
+        adapter.setDropDownViewResource(R.layout.sort_spinner_list_item_black);
+        filterSpinner.setAdapter(adapter);
+        filterSpinner.setSelection(0);
+        sortingMethod = SORT_OPTIONS[0];
+
+        filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                setSortingMethod(SORT_OPTIONS[i]);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+    }
+
+    private void setSortingMethod(String method) {
+        if (!method.equals(sortingMethod)) {
+            sortingMethod = method;
+            updateCommentList(null);
         }
     }
 
@@ -156,7 +200,7 @@ public class PostActivity extends AppCompatActivity {
     }
 
     private void updateCommentList(CommentListManager.OnUpdate onUpdate) {
-        commentListManager.updateCommentList(post.ID, null, null, onUpdate);
+        commentListManager.updateCommentList(post.ID, null, sortingMethod, onUpdate);
     }
 
     private void setupFab() {

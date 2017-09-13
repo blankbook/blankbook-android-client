@@ -13,6 +13,7 @@
     <dimen name="md_font">12sp</dimen>
     <dimen name="lg_font">16sp</dimen>
     <dimen name="xl_font">20sp</dimen>
+    <dimen name="small_toolbar_height">30dp</dimen>
     <item name="hi_alpha" format="float" type="dimen">0.87</item>
     <item name="md_alpha" format="float" type="dimen">0.54</item>
     <item name="lw_alpha" format="float" type="dimen">0.36</item>
