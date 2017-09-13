@@ -1,7 +1,9 @@
 package com.example.jacob.blankbookandroidclient.api;
 
 import com.example.jacob.blankbookandroidclient.api.models.Comment;
+import com.example.jacob.blankbookandroidclient.api.models.ContributorId;
 import com.example.jacob.blankbookandroidclient.api.models.Group;
+import com.example.jacob.blankbookandroidclient.api.models.IDWrapper;
 import com.example.jacob.blankbookandroidclient.api.models.Post;
 import com.example.jacob.blankbookandroidclient.api.models.RankedPosts;
 
@@ -36,12 +38,12 @@ public interface BlankBookAPI {
     );
 
     @GET("content/read/contributorid")
-    Call<Integer> getContributorid(
-        @Query("postid") String postId
+    Call<ContributorId> getContributorid(
+        @Query("postid") Long postId
     );
 
     @POST("content/write/post")
-    Call<Void> postPost(
+    Call<IDWrapper> postPost(
         @Body Post post
     );
 
@@ -53,7 +55,7 @@ public interface BlankBookAPI {
     );
 
     @POST("content/write/post/comment")
-    Call<Void> postPostComment(
+    Call<IDWrapper> postPostComment(
         @Body Comment comment
     );
 

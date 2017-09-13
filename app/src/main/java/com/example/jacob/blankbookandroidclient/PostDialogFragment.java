@@ -9,31 +9,52 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.Toast;
+
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class CommentDialogFragment extends DialogFragment {
-    @BindView(R.id.content)
-    EditText content;
+public class PostDialogFragment extends DialogFragment {
+    @BindView(R.id.title)
+    EditText title;
+    @BindView(R.id.body)
+    EditText body;
     @BindView(R.id.accept_comment)
     Button accept;
     @BindView(R.id.cancel_comment)
     Button cancel;
+    @BindView(R.id.group_selector)
+    Spinner groupSelector;
 
-    private OnCommentDialogResultListener onResult;
+    public static String GROUPS_TAG = "Groups";
 
-    public void setOnResult(OnCommentDialogResultListener onResult) {
+    private OnPostDialogResultListener onResult;
+    private List<String> possibleMemberGroups;
+
+    public void setOnResult(OnPostDialogResultListener onResult) {
         this.onResult = onResult;
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        final View view = inflater.inflate(R.layout.create_comment_dialog, container);
+        final View view = inflater.inflate(R.layout.create_post_dialog, container);
         ButterKnife.bind(this, view);
+
+        possibleMemberGroups = getArguments().getStringArrayList(GROUPS_TAG);
+        if (possibleMemberGroups == null || possibleMemberGroups.size() == 0) {
+            dismiss();
+            return view;
+        }
+        ArrayAdapter adapter = new ArrayAdapter(this.getActivity(), android.R.layout.simple_spinner_item, possibleMemberGroups);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        groupSelector.setAdapter(adapter);
 
         Window window = getDialog().getWindow();
         window.setGravity(Gravity.TOP | Gravity.LEFT);
@@ -49,8 +70,7 @@ public class CommentDialogFragment extends DialogFragment {
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
-        content.requestFocus();
-        getDialog().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+        title.requestFocus();
         super.onActivityCreated(savedInstanceState);
     }
 
@@ -64,7 +84,9 @@ public class CommentDialogFragment extends DialogFragment {
         accept.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (onResult != null) { onResult.onAccept(content.getText().toString()); }
+                if (onResult != null) {
+                    onResult.onAccept(title.getText().toString(), body.getText().toString(), (String) groupSelector.getSelectedItem());
+                }
             }
         });
         cancel.setOnClickListener(new View.OnClickListener() {
@@ -75,8 +97,8 @@ public class CommentDialogFragment extends DialogFragment {
         });
     }
 
-    public interface OnCommentDialogResultListener {
-        void onAccept(String content);
+    public interface OnPostDialogResultListener {
+        void onAccept(String title, String body, String groupName);
         void onCancel();
     }
 }

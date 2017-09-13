@@ -20,7 +20,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class MainActivityAnimator {
-    @BindView(R.id.toolbar)
+    @BindView(R.id.toptoolbar)
     Toolbar toolbar;
     @BindView(R.id.fab)
     FloatingActionButton fab;

@@ -1,41 +1,30 @@
 package com.example.jacob.blankbookandroidclient;
 
 import android.app.DialogFragment;
-import android.app.ListActivity;
-import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.ListAdapter;
-import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.TextView;
 
-import com.example.jacob.blankbookandroidclient.api.BlankBookAPI;
-import com.example.jacob.blankbookandroidclient.api.RetrofitClient;
 import com.example.jacob.blankbookandroidclient.api.models.Group;
 import com.example.jacob.blankbookandroidclient.managers.PublicGroupsManager;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class GroupSearchDialogFragment extends DialogFragment implements SearchView.OnQueryTextListener {
     @BindView(R.id.search_bar)
@@ -56,7 +45,7 @@ public class GroupSearchDialogFragment extends DialogFragment implements SearchV
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        final View view = inflater.inflate(R.layout.group_search_dialog_fragment, container);
+        final View view = inflater.inflate(R.layout.group_search_dialog, container);
         ButterKnife.bind(this, view);
 
         Window window = getDialog().getWindow();

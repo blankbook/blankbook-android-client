@@ -1,5 +1,8 @@
 package com.example.jacob.blankbookandroidclient;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -10,6 +13,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.util.Pair;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -23,27 +27,38 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
-import android.widget.Toast;
+import android.widget.Spinner;
 
 import com.example.jacob.blankbookandroidclient.adapters.MainDrawerRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.adapters.PostListRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.animations.MainActivityAnimator;
+import com.example.jacob.blankbookandroidclient.api.RetrofitClient;
 import com.example.jacob.blankbookandroidclient.api.models.Group;
+import com.example.jacob.blankbookandroidclient.api.models.IDWrapper;
 import com.example.jacob.blankbookandroidclient.api.models.Post;
+import com.example.jacob.blankbookandroidclient.managers.ContributorIdManager;
 import com.example.jacob.blankbookandroidclient.managers.LocalGroupsManger;
 import com.example.jacob.blankbookandroidclient.managers.PostListManager;
 import com.example.jacob.blankbookandroidclient.utils.SimpleCallback;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
-    @BindView(R.id.toolbar)
-    Toolbar toolbar;
+    @BindView(R.id.toptoolbar)
+    Toolbar topToolbar;
+    @BindView(R.id.bottomtoolbar)
+    Toolbar bottomToolbar;
     @BindView(R.id.fab)
     FloatingActionButton fab;
     @BindView(R.id.root)
@@ -62,17 +77,21 @@ public class MainActivity extends AppCompatActivity {
     public static final int GROUP_CREATION_ACTIVITY_ID = 0;
     public static final int FEED_CREATION_ACTIVITY_ID = 1;
 
+    private final String[] SORT_OPTIONS = {"rank", "time"};
     private final long ACTIVITY_ENTRY_ANIMATION_TIME = 200;
+    private final int MAX_RESULTS = 100;
 
     private MainActivityAnimator animator;
-    private Menu menu;
+    private Menu topMenu;
     private PostListManager postListManager;
     private LocalGroupsManger localGroupsManager;
+    private ContributorIdManager contributorIdManager;
     private MainDrawerRecyclerViewAdapter drawerAdapter;
     private ActionBar bar;
     private Set<String> selectedGroups = new HashSet<>();
     private SimpleCallback deleteCallback;
     private boolean onMainFeed = false;
+    private String sortingMethod = "rank";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,11 +100,13 @@ public class MainActivity extends AppCompatActivity {
         ButterKnife.bind(this);
 
         postListManager = new PostListManager();
-        setSupportActionBar(toolbar);
+        setSupportActionBar(topToolbar);
         bar = getSupportActionBar();
 
         localGroupsManager = LocalGroupsManger.getInstance();
         localGroupsManager.init(this);
+        contributorIdManager = ContributorIdManager.getInstance();
+        contributorIdManager.init(this);
 
         animator = new MainActivityAnimator(this);
         animator.setupListeners();
@@ -94,8 +115,9 @@ public class MainActivity extends AppCompatActivity {
 
         setupDrawer();
         setupPostListRefresh();
-        setFabToComment();
+        setFabToPost();
         setupPostList();
+        setupFab();
     }
 
     @Override
@@ -141,13 +163,41 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
-        this.menu = menu;
+    public boolean onCreateOptionsMenu(Menu topMenu) {
+        getMenuInflater().inflate(R.menu.main, topMenu);
+        this.topMenu = topMenu;
         if (onMainFeed) {
             menuOptionRemoveHide();
         }
+        Menu bottomMenu = bottomToolbar.getMenu();
+        getMenuInflater().inflate(R.menu.sorting, bottomMenu);
+        MenuItem filterItem = bottomMenu.findItem(R.id.filter_spinner);
+        Spinner filterSpinner = (Spinner) filterItem.getActionView();
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.sort_spinner_list_item, SORT_OPTIONS);
+        adapter.setDropDownViewResource(R.layout.sort_spinner_list_item);
+        filterSpinner.setAdapter(adapter);
+
+        filterSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                setSortingMethod(SORT_OPTIONS[i]);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
         return true;
+    }
+
+    private void setSortingMethod(String method) {
+        if (!sortingMethod.equals(method)) {
+            sortingMethod = method;
+            refreshPostList();
+        }
     }
 
 
@@ -206,7 +256,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupDrawer() {
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, root, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                this, root, topToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         toggle.syncState();
 
         drawer.setLayoutManager(new LinearLayoutManager(drawer.getContext()));
@@ -216,14 +266,14 @@ public class MainActivity extends AppCompatActivity {
                     public void onMainFeedSelect(View view) {
                         selectMainFeed();
                         closeDrawer();
-                        setFabToComment();
+                        setFabToPost();
                     }
 
                     @Override
                     public void onFeedSelect(View view, String name) {
                         selectFeed(name);
                         closeDrawer();
-                        setFabToComment();
+                        setFabToPost();
                     }
 
                     @Override
@@ -235,7 +285,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onGroupSelect(View view, String name) {
                         selectGroup(name);
                         closeDrawer();
-                        setFabToComment();
+                        setFabToPost();
                     }
 
                     @Override
@@ -277,6 +327,79 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    private void setupFab() {
+        setFabToPost();
+    }
+
+    private void addPostThroughDialog() {
+        final PostDialogFragment dialogFragment = new PostDialogFragment();
+        Bundle args = new Bundle();
+        args.putStringArrayList(PostDialogFragment.GROUPS_TAG, new ArrayList<>(selectedGroups));
+        dialogFragment.setArguments(args);
+        dialogFragment.setOnResult(new PostDialogFragment.OnPostDialogResultListener() {
+            @Override
+            public void onAccept(String title, String body, String groupName) {
+                addPost(title, body, groupName);
+                dialogFragment.dismiss();
+            }
+
+            @Override
+            public void onCancel() {
+                dialogFragment.dismiss();
+            }
+        });
+        dialogFragment.show(getFragmentManager(), "tag");
+    }
+
+    private void addPost(String title, String content, String groupName) {
+        Post newPost = new Post();
+        newPost.Title = title;
+        newPost.Content = content;
+        newPost.GroupName = groupName;
+        addPost(newPost);
+    }
+
+
+    private void addPost(final Post post) {
+        postListRefresh.setRefreshing(true);
+        RetrofitClient.getInstance().getBlankBookAPI().postPost(post)
+                .enqueue(new Callback<IDWrapper>() {
+                    @Override
+                    public void onResponse(Call<IDWrapper> call, Response<IDWrapper> response) {
+                        if (response.code() == 200) {
+                            refreshPostList();
+                        } else {
+                            onPostAddFailure(post);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<IDWrapper> call, Throwable t) {
+                        onPostAddFailure(post);
+                    }
+                });
+    }
+
+    private void onPostAddFailure(final Post post) {
+        new AlertDialog.Builder(this)
+                .setMessage(getResources().getString(R.string.error_adding_post))
+                .setPositiveButton(R.string.retry, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        addPost(post);
+                    }
+                })
+                .setNeutralButton(R.string.copy_body, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                        ClipData clip = ClipData.newPlainText("Post", post.Content);
+                        clipboard.setPrimaryClip(clip);
+                    }
+                })
+                .setNegativeButton(R.string.cancel, null)
+                .show();
     }
 
     public void onGroupSearchDialogResult(Group group) {
@@ -336,11 +459,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void menuOptionRemoveHide() {
-        if (menu != null) { menu.findItem(R.id.action_remove).setVisible(false); }
+        if (topMenu != null) { topMenu.findItem(R.id.action_remove).setVisible(false); }
     }
 
     private void menuOptionRemoveShow() {
-        if (menu != null) { menu.findItem(R.id.action_remove).setVisible(true); }
+        if (topMenu != null) { topMenu.findItem(R.id.action_remove).setVisible(true); }
     }
 
     private void refreshPostList() {
@@ -356,7 +479,7 @@ public class MainActivity extends AppCompatActivity {
 
         animator.animatePostListRefreshStateEnter();
 
-        postListManager.updatePostList(selectedGroups, null, null, null, "rank", null, null, null,
+        postListManager.updatePostList(selectedGroups, null, null, null, sortingMethod, null, null, MAX_RESULTS,
                 new PostListManager.OnUpdate() {
                     @Override
                     public void onSuccess() {
@@ -387,7 +510,7 @@ public class MainActivity extends AppCompatActivity {
         if (newTitle.equals(bar.getTitle().toString())) {
             return;
         }
-        final View title = toolbar.getChildAt(0);
+        final View title = topToolbar.getChildAt(0);
         animator.fadeTransitionViewProperties(title, new SimpleCallback() {
             @Override
             public void run() {
@@ -396,12 +519,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void setFabToComment() {
+    private void setFabToPost() {
         fab.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.drawable.ic_comment));
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(MainActivity.this, "Add a comment", Toast.LENGTH_SHORT).show();
+                addPostThroughDialog();
             }
         });
     }
@@ -413,7 +536,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 LocalGroupsManger.getInstance().addGroup(targetGroup.Name);
                 drawerAdapter.highlightGroup(targetGroup.Name);
-                setFabToComment();
+                setFabToPost();
             }
         });
     }

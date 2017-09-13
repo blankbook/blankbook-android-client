@@ -18,6 +18,7 @@
     <string name="preferences_groups_key">groups</string>
     <string name="preferences_feeds_key">feeds</string>
     <string name="preferences_feed_key_prefix">feed:</string>
+    <string name="preferences_contributor_id_prefix">contributorid</string>
     <string name="title_activity_group_search">GroupSearchActivity</string>
     <string name="search_title">Search Groups</string>
     <string name="search_hint">Group&#8230;</string>
@@ -39,7 +40,13 @@
     <string name="fab_transition">FabTransition</string>
     <string name="cancel">Cancel</string>
     <string name="copy_content">Copy Content</string>
+    <string name="copy_body">Copy Body</string>
     <string name="accept">Accept</string>
     <string name="retry">Retry</string>
-    <string name="error_adding_comment">Error Adding Commment</string>
+    <string name="error_adding_comment">Error adding commment</string>
+    <string name="error_adding_post">Error adding post</string>
+    <string name="title">Title</string>
+    <string name="body">Body</string>
+    <string name="target_group">Target group</string>
+    <string name="filter">Filter</string>
 </resources>

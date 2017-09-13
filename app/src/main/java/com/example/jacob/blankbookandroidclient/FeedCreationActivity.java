@@ -9,7 +9,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,7 +26,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class FeedCreationActivity extends AppCompatActivity {
-    @BindView(R.id.toolbar)
+    @BindView(R.id.toptoolbar)
     Toolbar toolbar;
     @BindView(R.id.name)
     EditText name;

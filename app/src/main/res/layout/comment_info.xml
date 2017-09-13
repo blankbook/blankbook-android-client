@@ -36,7 +36,7 @@
                 style="@style/light_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="24dp"
+                android:layout_marginBottom="20dp"
                 android:layout_toEndOf="@id/voting_section"
                 android:ellipsize="start"
                 android:padding="@dimen/md_margin"

@@ -66,6 +66,15 @@ public class PostListManager {
         return posts;
     }
 
+    public void addPost(Post newPost) {
+        posts.add(0, newPost);
+        notifyListeners();
+    }
+
+    public void removePost(Post post) {
+        posts.remove(post);
+    }
+
     public void addListener(UpdateListener listener) {
         listeners.add(listener);
     }

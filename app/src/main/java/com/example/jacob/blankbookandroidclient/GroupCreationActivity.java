@@ -32,7 +32,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class GroupCreationActivity extends AppCompatActivity {
-    @BindView(R.id.toolbar)
+    @BindView(R.id.toptoolbar)
     Toolbar toolbar;
     @BindView(R.id.name)
     EditText name;
