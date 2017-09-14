@@ -43,10 +43,12 @@
     <string name="copy_body">Copy Body</string>
     <string name="accept">Accept</string>
     <string name="retry">Retry</string>
-    <string name="error_adding_comment">Error adding commment</string>
+    <string name="error_adding_comment">Error adding comment</string>
     <string name="error_adding_post">Error adding post</string>
     <string name="title">Title</string>
     <string name="body">Body</string>
     <string name="target_group">Target group</string>
     <string name="filter">Filter</string>
+    <string name="could_not_refresh_comments">Could not refresh comments</string>
+    <string name="could_not_refresh_posts">Could not refresh posts</string>
 </resources>

@@ -31,6 +31,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.example.jacob.blankbookandroidclient.adapters.MainDrawerRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.adapters.PostListRecyclerViewAdapter;
@@ -53,6 +54,8 @@ import butterknife.ButterKnife;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+
+import static com.example.jacob.blankbookandroidclient.managers.PostListManager.SORT_OPTIONS;
 
 public class MainActivity extends AppCompatActivity {
     @BindView(R.id.toptoolbar)
@@ -77,9 +80,9 @@ public class MainActivity extends AppCompatActivity {
     public static final int GROUP_CREATION_ACTIVITY_ID = 0;
     public static final int FEED_CREATION_ACTIVITY_ID = 1;
 
-    private final String[] SORT_OPTIONS = {"rank", "time"};
     private final long ACTIVITY_ENTRY_ANIMATION_TIME = 200;
-    private final int MAX_RESULTS = 100;
+    private final int INITIAL_PAGE_SIZE = 10;
+    private final int EXTRA_PAGE_SIZE = 5;
 
     private MainActivityAnimator animator;
     private Menu topMenu;
@@ -325,6 +328,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onFailure() {
                         postListRefresh.setRefreshing(false);
+                        showPostUpdateFailureMessage();
                     }
                 });
             }
@@ -481,7 +485,7 @@ public class MainActivity extends AppCompatActivity {
 
         animator.animatePostListRefreshStateEnter();
 
-        postListManager.updatePostList(selectedGroups, null, null, null, sortingMethod, null, null, MAX_RESULTS,
+        postListManager.updatePostList(selectedGroups, sortingMethod, INITIAL_PAGE_SIZE,
                 new PostListManager.OnUpdate() {
                     @Override
                     public void onSuccess() {
@@ -495,6 +499,10 @@ public class MainActivity extends AppCompatActivity {
                         animator.animatePostListRefreshStateExit();
                     }
                 });
+    }
+
+    private void loadNextPostListChunk() {
+
     }
 
     private void closeDrawer() {
@@ -541,5 +549,9 @@ public class MainActivity extends AppCompatActivity {
                 setFabToPost();
             }
         });
+    }
+
+    private void showPostUpdateFailureMessage() {
+        Toast.makeText(this, getResources().getString(R.string.could_not_refresh_posts), Toast.LENGTH_SHORT).show();
     }
 }

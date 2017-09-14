@@ -15,7 +15,6 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,6 +25,7 @@ import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.jacob.blankbookandroidclient.adapters.CommentListRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.animations.ElevationAnimation;
@@ -131,7 +131,15 @@ public class PostActivity extends AppCompatActivity {
     private void setSortingMethod(String method) {
         if (!method.equals(sortingMethod)) {
             sortingMethod = method;
-            updateCommentList(null);
+            updateCommentList(new CommentListManager.OnUpdate() {
+                @Override
+                public void onSuccess() {}
+
+                @Override
+                public void onFailure() {
+                    showCommentsUpdateFailureMessage();
+                }
+            });
         }
     }
 
@@ -193,6 +201,7 @@ public class PostActivity extends AppCompatActivity {
                     @Override
                     public void onFailure() {
                         commentListRefresh.setRefreshing(false);
+                        showCommentsUpdateFailureMessage();
                     }
                 });
             }
@@ -324,5 +333,9 @@ public class PostActivity extends AppCompatActivity {
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
+    }
+
+    private void showCommentsUpdateFailureMessage() {
+        Toast.makeText(this, getResources().getString(R.string.could_not_refresh_comments), Toast.LENGTH_SHORT).show();
     }
 }

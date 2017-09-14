@@ -12,6 +12,6 @@ public class Post implements Serializable {
     public String EditContent;
     public String ContentType;
     public String GroupName;
-    public String Time;
+    public long Time;
     public String Color;
 }

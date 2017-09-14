@@ -1,8 +1,11 @@
 package com.example.jacob.blankbookandroidclient.managers;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.LongSparseArray;
+import android.widget.Toast;
 
+import com.example.jacob.blankbookandroidclient.R;
 import com.example.jacob.blankbookandroidclient.api.BlankBookAPI;
 import com.example.jacob.blankbookandroidclient.api.RetrofitClient;
 import com.example.jacob.blankbookandroidclient.api.models.Comment;
@@ -40,7 +43,6 @@ public class CommentListManager {
 
                     @Override
                     public void onFailure(Call<List<Comment>> call, Throwable t) {
-                        notifyListeners();
                         if (onUpdate != null) {
                             onUpdate.onFailure();
                         }
@@ -104,12 +106,12 @@ public class CommentListManager {
             commentReplies.get(comment.ParentComment).add(augmentedComment);
         }
 
-        List<AugmentedComment> unflattenedComments = commentReplies.get(-1L);
-        if (unflattenedComments == null) {
+        List<AugmentedComment> unflatenedComments = commentReplies.get(-1L);
+        if (unflatenedComments == null) {
             return new ArrayList<>();
         }
         Stack<AugmentedComment> commentsThatNeedReplies = new Stack<>();
-        commentsThatNeedReplies.addAll(unflattenedComments);
+        commentsThatNeedReplies.addAll(unflatenedComments);
 
         while (!commentsThatNeedReplies.isEmpty()) {
             AugmentedComment commentToAddTo = commentsThatNeedReplies.pop();
@@ -120,7 +122,7 @@ public class CommentListManager {
             }
         }
 
-        return unflattenedComments;
+        return unflatenedComments;
     }
 
     public interface UpdateListener {
