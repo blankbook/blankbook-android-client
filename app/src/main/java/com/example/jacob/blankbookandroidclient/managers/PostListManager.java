@@ -1,6 +1,7 @@
 package com.example.jacob.blankbookandroidclient.managers;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.example.jacob.blankbookandroidclient.api.BlankBookAPI;
 import com.example.jacob.blankbookandroidclient.api.RetrofitClient;
@@ -19,20 +20,25 @@ public class PostListManager {
     private List<Post> posts = new ArrayList<>();
     private final BlankBookAPI api;
     private List<UpdateListener> listeners = new ArrayList<>();
+    private List<LoadStateChangedListener> loadStateChangedListeners = new ArrayList<>();
     private Call<RankedPosts> currentCall;
     private Long lastRankVersion;
     private String lastOrdering;
+    private LoadState loadState = LoadState.moreAvailable;
     private Set<String> lastGroupNames;
 
     private static final String rankString = "rank";
     private static final String timeString = "time";
     public static final String[] SORT_OPTIONS = {rankString, timeString};
 
+    public enum LoadState { loading, moreAvailable, noMoreAvailable }
+
     public PostListManager() {
         api = RetrofitClient.getInstance().getBlankBookAPI();
     }
 
-    public void updatePostList(@NonNull final Set<String> groupNames, final String ordering, Integer maxCount, final OnUpdate onUpdate) {
+    public void updatePostList(@NonNull final Set<String> groupNames, final String ordering, final Integer maxCount, final OnUpdate onUpdate) {
+        setLoadState(LoadState.loading);
         getPostList(groupNames, null, null, null, null, null, ordering, maxCount, new OnPostListRetrieval() {
             @Override
             public void onPostListRetrieval(RankedPosts rankedPosts) {
@@ -44,6 +50,11 @@ public class PostListManager {
                 if (onUpdate != null) {
                     onUpdate.onSuccess();
                 }
+                if (posts.size() == maxCount) {
+                    setLoadState(LoadState.moreAvailable);
+                } else {
+                    setLoadState(LoadState.noMoreAvailable);
+                }
             }
 
             @Override
@@ -51,6 +62,10 @@ public class PostListManager {
                 if (onUpdate != null) {
                     onUpdate.onFailure();
                 }
+                // if there is a failure, we don't want to keep trying to load more posts,
+                // since the loading will likely fail, so we say there are no more
+                // available, and let the user force a refresh if they want
+                setLoadState(LoadState.noMoreAvailable);
             }
         });
     }
@@ -76,11 +91,13 @@ public class PostListManager {
             public void onFailure(Call<RankedPosts> call, Throwable t) {
                 currentCall = null;
                 callback.onPostListRetrievalFailure();
+                Log.e("PostListManager", "error getting post list: " + t.getMessage());
             }
         });
     }
 
-    public void loadNextPostListChunk(int size, final OnUpdate onUpdate) {
+    public void loadNextPostListChunk(final int size, final OnUpdate onUpdate) {
+        setLoadState(LoadState.loading);
         if (posts.size() == 0) {
             return;
         }
@@ -103,6 +120,11 @@ public class PostListManager {
                         if (onUpdate != null) {
                             onUpdate.onSuccess();
                         }
+                        if (rankedPosts.Posts.size() == size) {
+                            setLoadState(LoadState.moreAvailable);
+                        } else {
+                            setLoadState(LoadState.noMoreAvailable);
+                        }
                     }
 
                     @Override
@@ -110,12 +132,16 @@ public class PostListManager {
                         if (onUpdate != null) {
                             onUpdate.onFailure();
                         }
+                        // if there is a failure, we don't want to keep trying to load more posts,
+                        // since the loading will likely fail, so we say there are no more
+                        // available, and let the user force a refresh if they want
+                        setLoadState(LoadState.noMoreAvailable);
                     }
                 });
     }
 
     public boolean isLoading() {
-        return currentCall == null;
+        return currentCall != null;
     }
 
     private long getOldestPostTime() {
@@ -133,7 +159,7 @@ public class PostListManager {
         if (posts.size() == 0) {
             return 0;
         }
-        long lowestRank = posts.get(0).Time;
+        long lowestRank = posts.get(0).Rank;
         for (int i = 1; i < posts.size(); ++i) {
             lowestRank = Math.max(lowestRank, posts.get(i).Rank);
         }
@@ -168,14 +194,37 @@ public class PostListManager {
         listeners.remove(listener);
     }
 
+    public void addLoadStateListener(LoadStateChangedListener listener) {
+        loadStateChangedListeners.add(listener);
+    }
+
+    public void removeLoadStateListener(LoadStateChangedListener listener) {
+        loadStateChangedListeners.remove(listener);
+    }
+
     private void notifyListeners() {
         for (UpdateListener listener : listeners) {
             listener.onUpdate();
         }
     }
 
+    private void setLoadState(LoadState newState) {
+        loadState = newState;
+        for (LoadStateChangedListener listener : loadStateChangedListeners) {
+            listener.onLoadStateChanged(newState);
+        }
+    }
+
+    public LoadState getLoadState() {
+        return loadState;
+    }
+
     public interface UpdateListener {
         void onUpdate();
+    }
+
+    public interface LoadStateChangedListener {
+        void onLoadStateChanged(LoadState newState);
     }
 
     public interface OnUpdate {

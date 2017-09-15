@@ -22,6 +22,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -81,8 +82,9 @@ public class MainActivity extends AppCompatActivity {
     public static final int FEED_CREATION_ACTIVITY_ID = 1;
 
     private final long ACTIVITY_ENTRY_ANIMATION_TIME = 200;
-    private final int INITIAL_PAGE_SIZE = 10;
-    private final int EXTRA_PAGE_SIZE = 5;
+    private final int INITIAL_PAGE_SIZE = 30;
+    private final int EXTRA_PAGE_SIZE = 20;
+    private final int RELOAD_TRIGGER_DISTANCE = 10; // # of items from the bottom we should be to trigger a reload
 
     private MainActivityAnimator animator;
     private Menu topMenu;
@@ -232,6 +234,19 @@ public class MainActivity extends AppCompatActivity {
                 goToPostActivity(post, view);
             }
         }));
+        postList.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                int lastVisibleItem = ((LinearLayoutManager) postList.getLayoutManager()).findLastVisibleItemPosition();
+                int itemCount = postList.getAdapter().getItemCount();
+                int difference = itemCount - lastVisibleItem;
+                if (RELOAD_TRIGGER_DISTANCE >= difference) {
+                    if (postListManager.getLoadState() == PostListManager.LoadState.moreAvailable) {
+                        postListManager.loadNextPostListChunk(EXTRA_PAGE_SIZE, null);
+                    }
+                }
+            }
+        });
         selectMainFeed();
     }
 
@@ -465,11 +480,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void menuOptionRemoveHide() {
-        if (topMenu != null) { topMenu.findItem(R.id.action_remove).setVisible(false); }
+        if (topMenu != null) {
+            topMenu.findItem(R.id.action_remove).setVisible(false);
+        }
     }
 
     private void menuOptionRemoveShow() {
-        if (topMenu != null) { topMenu.findItem(R.id.action_remove).setVisible(true); }
+        if (topMenu != null) {
+            topMenu.findItem(R.id.action_remove).setVisible(true);
+        }
     }
 
     private void refreshPostList() {
@@ -489,20 +508,20 @@ public class MainActivity extends AppCompatActivity {
                 new PostListManager.OnUpdate() {
                     @Override
                     public void onSuccess() {
-                        if (onUpdate != null) { onUpdate.onSuccess(); }
+                        if (onUpdate != null) {
+                            onUpdate.onSuccess();
+                        }
                         animator.animatePostListRefreshStateExit();
                     }
 
                     @Override
                     public void onFailure() {
-                        if (onUpdate != null) { onUpdate.onFailure(); }
+                        if (onUpdate != null) {
+                            onUpdate.onFailure();
+                        }
                         animator.animatePostListRefreshStateExit();
                     }
                 });
-    }
-
-    private void loadNextPostListChunk() {
-
     }
 
     private void closeDrawer() {
