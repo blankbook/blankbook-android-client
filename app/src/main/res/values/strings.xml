@@ -19,6 +19,7 @@
     <string name="preferences_feeds_key">feeds</string>
     <string name="preferences_feed_key_prefix">feed:</string>
     <string name="preferences_contributor_id_prefix">contributorid</string>
+    <string name="preferences_vote_prefix">contributorid</string>
     <string name="title_activity_group_search">GroupSearchActivity</string>
     <string name="search_title">Search Groups</string>
     <string name="search_hint">Group&#8230;</string>

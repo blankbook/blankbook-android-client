@@ -49,7 +49,7 @@ public interface BlankBookAPI {
 
     @PUT("content/write/post/vote")
     Call<Void> putPostVote(
-        @Query("userid") Long userId,
+        @Query("userid") Integer userId,
         @Query("postid") Long postId,
         @Query("vote") int vote
     );
@@ -61,7 +61,7 @@ public interface BlankBookAPI {
 
     @PUT("content/write/post/comment/vote")
     Call<Void> putPostCommentVote(
-        @Query("userid") Long userId,
+        @Query("userid") Integer userId,
         @Query("postid") Long postId,
         @Query("commentid") Long commentId,
         @Query("vote") Integer vote

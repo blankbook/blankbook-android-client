@@ -22,7 +22,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -44,8 +43,10 @@ import com.example.jacob.blankbookandroidclient.api.models.Post;
 import com.example.jacob.blankbookandroidclient.managers.ContributorIdManager;
 import com.example.jacob.blankbookandroidclient.managers.LocalGroupsManger;
 import com.example.jacob.blankbookandroidclient.managers.PostListManager;
+import com.example.jacob.blankbookandroidclient.managers.VoteManager;
 import com.example.jacob.blankbookandroidclient.utils.SimpleCallback;
 
+import java.security.Security;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -59,6 +60,11 @@ import retrofit2.Response;
 import static com.example.jacob.blankbookandroidclient.managers.PostListManager.SORT_OPTIONS;
 
 public class MainActivity extends AppCompatActivity {
+    static {
+        Security.insertProviderAt(new org.spongycastle.jce.provider.BouncyCastleProvider(), 1);
+    }
+
+
     @BindView(R.id.toptoolbar)
     Toolbar topToolbar;
     @BindView(R.id.bottomtoolbar)
@@ -112,6 +118,7 @@ public class MainActivity extends AppCompatActivity {
         localGroupsManager.init(this);
         contributorIdManager = ContributorIdManager.getInstance();
         contributorIdManager.init(this);
+        VoteManager.getInstance().init(this);
 
         animator = new MainActivityAnimator(this);
         animator.setupListeners();

@@ -112,6 +112,7 @@ public class MainActivityAnimator {
     public void animatePostListRefreshStateEnter() {
         final Animation fadeOut = new AlphaAnimation(1f, 0f);
         fadeOut.setDuration(shortAnimTime);
+        fadeOut.setFillAfter(true);
 
         postList.startAnimation(fadeOut);
         postList.getAnimation().setAnimationListener(new Animation.AnimationListener() {
@@ -130,6 +131,7 @@ public class MainActivityAnimator {
 
     public void animatePostListRefreshStateExit() {
         final Animation fadeIn = new AlphaAnimation(0f, 1f);
+        fadeIn.setFillAfter(true);
         fadeIn.setDuration(shortAnimTime);
 
         postListRefresh.setRefreshing(false);
