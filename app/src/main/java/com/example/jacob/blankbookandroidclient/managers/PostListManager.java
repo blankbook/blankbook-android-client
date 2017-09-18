@@ -27,8 +27,8 @@ public class PostListManager {
     private LoadState loadState = LoadState.moreAvailable;
     private Set<String> lastGroupNames;
 
-    private static final String rankString = "rank";
-    private static final String timeString = "time";
+    public static final String rankString = "rank";
+    public static final String timeString = "time";
     public static final String[] SORT_OPTIONS = {rankString, timeString};
 
     public enum LoadState { loading, moreAvailable, noMoreAvailable }

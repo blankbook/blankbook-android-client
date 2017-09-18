@@ -29,6 +29,7 @@ public class PostListRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerVi
         updateListener = new PostListManager.UpdateListener() {
             @Override
             public void onUpdate() {
+                Log.d("Log", "Calling notify dataset changed, show group name is " + showGroupName);
                 notifyDataSetChanged();
             }
         };
@@ -73,7 +74,7 @@ public class PostListRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerVi
         if (viewType == POST_VIEW_TYPE) {
             View view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.post_info, parent, false);
-            return new PostViewHolder(view, showGroupName, clickListener);
+            return new PostViewHolder(view, clickListener);
         } else {
             View view = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.loading_tile, parent, false);
@@ -84,7 +85,7 @@ public class PostListRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerVi
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         if (position < postListManager.getPostList().size()) {
-            ((PostViewHolder) holder).setPost(postListManager.getPostList().get(position));
+            ((PostViewHolder) holder).setPost(postListManager.getPostList().get(position), showGroupName);
         }
     }
 

@@ -35,18 +35,16 @@ public class PostViewHolder extends RecyclerView.ViewHolder {
 
     private View view;
     private PostListRecyclerViewAdapter.OnClickListener clickListener;
-    private boolean showGroupName;
     private int vote = 0;
     private final float voteBtnLwAlpha;
     private final float voteBtnHiAlpha;
     private int initialVote = 0;
 
-    public PostViewHolder(View view, boolean showGroupName, PostListRecyclerViewAdapter.OnClickListener clickListener) {
+    public PostViewHolder(View view, PostListRecyclerViewAdapter.OnClickListener clickListener) {
         super(view);
         ButterKnife.bind(this, view);
         this.view = view;
         this.clickListener = clickListener;
-        this.showGroupName = showGroupName;
         TypedValue out = new TypedValue();
         view.getContext().getResources().getValue(R.dimen.hi_alpha, out, true);
         voteBtnHiAlpha = out.getFloat();
@@ -54,19 +52,13 @@ public class PostViewHolder extends RecyclerView.ViewHolder {
         voteBtnLwAlpha = out.getFloat();
     }
 
-    public void setPost(final Post post) {
+    public void setPost(final Post post, boolean showGroupName) {
         groupName.setText(post.GroupName);
         title.setText(post.Title);
         content.setText(post.Content);
         score.setText(String.valueOf(post.Score));
         title.setMaxLines(2);
         content.setMaxLines(3);
-
-        if (showGroupName) {
-            groupName.setVisibility(View.VISIBLE);
-        } else {
-            groupName.setVisibility(View.GONE);
-        }
 
         view.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -96,6 +88,11 @@ public class PostViewHolder extends RecyclerView.ViewHolder {
                 }
             }
         });
+        if (showGroupName) {
+            groupName.setVisibility(View.VISIBLE);
+        } else {
+            groupName.setVisibility(View.GONE);
+        }
     }
 
     private void setVote(final int newVote, final Post post) {
