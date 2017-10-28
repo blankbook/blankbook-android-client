@@ -15,6 +15,7 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -133,7 +134,8 @@ public class PostActivity extends AppCompatActivity {
             sortingMethod = method;
             updateCommentList(new CommentListManager.OnUpdate() {
                 @Override
-                public void onSuccess() {}
+                public void onSuccess() {
+                }
 
                 @Override
                 public void onFailure() {
@@ -213,13 +215,6 @@ public class PostActivity extends AppCompatActivity {
     }
 
     private void setupFab() {
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
         commentList.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {

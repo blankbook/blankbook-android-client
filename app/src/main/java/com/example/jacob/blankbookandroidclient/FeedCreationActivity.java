@@ -78,7 +78,7 @@ public class FeedCreationActivity extends AppCompatActivity {
 
     private void setupGroupList() {
         groupList.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-        groupList.setAdapter(new GroupSelectionRecyclerViewAdapter(LocalGroupsManger.getInstance().getGroups()));
+        groupList.setAdapter(new GroupSelectionRecyclerViewAdapter(LocalGroupsManger.getInstance().getGroupNames()));
     }
 
     private void setupErrorDetection() {

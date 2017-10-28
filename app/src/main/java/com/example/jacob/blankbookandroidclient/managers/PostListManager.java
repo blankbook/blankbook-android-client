@@ -167,7 +167,9 @@ public class PostListManager {
     }
 
     public void emptyPostList() {
-        currentCall.cancel();
+        if (currentCall != null) {
+            currentCall.cancel();
+        }
         currentCall = null;
         posts = new ArrayList<>();
         notifyListeners();

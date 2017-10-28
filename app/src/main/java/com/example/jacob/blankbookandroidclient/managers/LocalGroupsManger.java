@@ -2,8 +2,10 @@ package com.example.jacob.blankbookandroidclient.managers;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.ArraySet;
 
 import com.example.jacob.blankbookandroidclient.R;
+import com.example.jacob.blankbookandroidclient.api.models.Group;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,11 +18,9 @@ public class LocalGroupsManger {
     private static LocalGroupsManger instance;
     private SharedPreferences sharedPrefs;
     private String groupsKey;
+    private String groupProtectedPrefix;
     private String feedsKey;
     private String feedKeyPrefix;
-    private List<String> groups;
-    private List<String> feeds;
-    private HashMap<String, Set<String>> feedsGroups = new HashMap<>();
 
     public static LocalGroupsManger getInstance() {
         if (instance == null) {
@@ -32,46 +32,41 @@ public class LocalGroupsManger {
     public void init(Context context) {
         final String fileKey = context.getResources().getString(R.string.preferences_file_key);
         groupsKey = context.getResources().getString(R.string.preferences_groups_key);
+        groupProtectedPrefix = context.getResources().getString(R.string.preferences_group_protected_key_prefix);
         feedsKey = context.getResources().getString(R.string.preferences_feeds_key);
         feedKeyPrefix = context.getResources().getString(R.string.preferences_feed_key_prefix);
 
         sharedPrefs = context.getSharedPreferences(fileKey, Context.MODE_PRIVATE);
-
-        groups = new ArrayList<>(sharedPrefs.getStringSet(groupsKey, new HashSet<String>()));
-        feeds = new ArrayList<>(sharedPrefs.getStringSet(feedsKey, new HashSet<String>()));
-        for (String feed : feeds) {
-            feedsGroups.put(feed, sharedPrefs.getStringSet(feedKeyPrefix + feed, new HashSet<String>()));
-        }
     }
 
-    public List<String> getGroups() {
-        return groups;
+    public List<String> getGroupNames() {
+        return new ArrayList<>(sharedPrefs.getStringSet(groupsKey, new HashSet<String>()));
     }
 
     public List<String> getFeeds() {
-        return feeds;
+        return new ArrayList<>(sharedPrefs.getStringSet(feedsKey, new HashSet<String>()));
     }
 
     public Set<String> getFeedGroups(String feed) {
-        return feedsGroups.get(feed);
+        return sharedPrefs.getStringSet(feedKeyPrefix + feed, new HashSet<String>());
     }
 
-    public void addGroup(String group) {
-        List<String> groups = getGroups();
-        groups.add(group);
-        setGroups(groups);
+    public boolean isGroupProtected(String group) {
+        return sharedPrefs.getBoolean(groupProtectedPrefix + group, false);
     }
 
-    public void removeGroup(String group) {
-        List<String> groups = getGroups();
-        for (Iterator<String> iter = groups.iterator(); iter.hasNext();) {
-            String cur = iter.next();
-            if (group.equals(cur)) {
-                iter.remove();
-                setGroups(groups);
-                break;
-            }
-        }
+    public void addGroup(Group group) {
+        List<String> groupNames = getGroupNames();
+        groupNames.add(group.Name);
+        sharedPrefs.edit().putStringSet(groupsKey, new HashSet<>(groupNames)).apply();
+        sharedPrefs.edit().putBoolean(groupProtectedPrefix + group.Name, group.Protected).apply();
+    }
+
+    public void removeGroup(String groupName) {
+        List<String> groupNames = getGroupNames();
+        groupNames.remove(groupName);
+        sharedPrefs.edit().putStringSet(groupsKey, new HashSet<>(groupNames)).apply();
+        sharedPrefs.edit().remove(groupProtectedPrefix + groupName).apply();
     }
 
     public void addFeed(String feed, Set<String> feedGroups) {
@@ -112,23 +107,21 @@ public class LocalGroupsManger {
         }
     }
 
-    private void setGroups(List<String> groups) {
-        sharedPrefs.edit().putStringSet(groupsKey, new HashSet<>(groups)).apply();
-        this.groups = groups;
+    private void setGroups(List<Group> groups) {
+        for (Group group : groups) {
+            addGroup(group);
+        }
     }
 
     private void setFeeds(List<String> feeds) {
         sharedPrefs.edit().putStringSet(feedsKey, new HashSet<>(feeds)).apply();
-        this.feeds = feeds;
     }
 
     private void setFeedGroups(String feed, Set<String> feedGroups) {
         sharedPrefs.edit().putStringSet(feedKeyPrefix + feed, feedGroups).apply();
-        this.feedsGroups.put(feed, feedGroups);
     }
 
     private void deleteFeedGroup(String feed) {
         sharedPrefs.edit().remove(feedKeyPrefix + feed).apply();
-        this.feedsGroups.remove(feed);
     }
 }

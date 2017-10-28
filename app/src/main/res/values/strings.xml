@@ -18,6 +18,7 @@
     <string name="preferences_groups_key">groups</string>
     <string name="preferences_feeds_key">feeds</string>
     <string name="preferences_feed_key_prefix">feed:</string>
+    <string name="preferences_group_protected_key_prefix">groupprotected:</string>
     <string name="preferences_contributor_id_prefix">contributorid</string>
     <string name="preferences_vote_prefix">contributorid</string>
     <string name="title_activity_group_search">GroupSearchActivity</string>
@@ -34,7 +35,9 @@
     <string name="passwords_no_match_error">passwords don\'t match</string>
     <string name="error_creating_group">error creating group</string>
     <string name="new_feed">New Feed</string>
+    <string name="error_creating_post">error creating post</string>
     <string name="error_creating_feed">error creating feed</string>
+    <string name="encryption_error">could not encrypt data</string>
     <string name="remove">Remove</string>
     <string name="title_activity_post">PostActivity</string>
     <string name="post_info_transition">PostInfoTransition</string>

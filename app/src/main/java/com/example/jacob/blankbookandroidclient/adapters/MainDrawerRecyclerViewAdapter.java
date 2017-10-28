@@ -1,19 +1,12 @@
 package com.example.jacob.blankbookandroidclient.adapters;
 
 import android.graphics.Color;
-import android.graphics.Rect;
-import android.os.Build;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
-import android.transition.Explode;
-import android.transition.Transition;
-import android.transition.TransitionManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.jacob.blankbookandroidclient.R;
 import com.example.jacob.blankbookandroidclient.managers.LocalGroupsManger;
@@ -63,7 +56,7 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
     public int getItemCount() {
         // main feed + groups header + feeds header
         final int numExtraEntries = 3;
-        return localGroupsManger.getGroups().size() + localGroupsManger.getFeeds().size() + numExtraEntries;
+        return localGroupsManger.getGroupNames().size() + localGroupsManger.getFeeds().size() + numExtraEntries;
     }
 
     @Override
@@ -84,7 +77,7 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
             return GROUPS_HEADER_VIEW_HOLDER;
         }
         position -= 1; // pop off 'groups header' from list
-        position -= localGroupsManger.getGroups().size(); // pop off all group list items from list
+        position -= localGroupsManger.getGroupNames().size(); // pop off all group list items from list
         if (position < 0) {
             return GROUP_VIEW_HOLDER;
         }
@@ -133,7 +126,7 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
                 // main feed + groups header + feed header + feeds
                 final int offset = 3 + localGroupsManger.getFeeds().size();
                 final int i = position - offset;
-                ((GroupViewHolder) holder).setGroup(localGroupsManger.getGroups().get(i));
+                ((GroupViewHolder) holder).setGroup(localGroupsManger.getGroupNames().get(i));
             }
         }
         holder.updateHighlight();
@@ -317,7 +310,7 @@ public class MainDrawerRecyclerViewAdapter extends RecyclerView.Adapter<MainDraw
     }
 
     private int findGroupIndex(String group) {
-        final List<String> groups = localGroupsManger.getGroups();
+        final List<String> groups = localGroupsManger.getGroupNames();
         for (int i = 0; i < groups.size(); ++i) {
             if (group.equals(groups.get(i))) {
                 return i;

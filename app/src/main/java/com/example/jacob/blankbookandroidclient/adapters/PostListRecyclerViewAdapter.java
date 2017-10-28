@@ -29,7 +29,6 @@ public class PostListRecyclerViewAdapter extends RecyclerView.Adapter<RecyclerVi
         updateListener = new PostListManager.UpdateListener() {
             @Override
             public void onUpdate() {
-                Log.d("Log", "Calling notify dataset changed, show group name is " + showGroupName);
                 notifyDataSetChanged();
             }
         };

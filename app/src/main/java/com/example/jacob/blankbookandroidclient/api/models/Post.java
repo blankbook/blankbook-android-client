@@ -10,8 +10,8 @@ public class Post implements Serializable {
     public String EditTitle;
     public String Content;
     public String EditContent;
-    public String ContentType;
+    public String ContentType = "text";
     public String GroupName;
     public long Time;
-    public String Color;
+    public String Color = "000000";
 }

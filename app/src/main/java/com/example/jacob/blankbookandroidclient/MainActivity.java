@@ -22,14 +22,17 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
@@ -42,9 +45,12 @@ import com.example.jacob.blankbookandroidclient.api.models.Group;
 import com.example.jacob.blankbookandroidclient.api.models.IDWrapper;
 import com.example.jacob.blankbookandroidclient.api.models.Post;
 import com.example.jacob.blankbookandroidclient.managers.ContributorIdManager;
+import com.example.jacob.blankbookandroidclient.managers.GroupPasswordManager;
 import com.example.jacob.blankbookandroidclient.managers.LocalGroupsManger;
 import com.example.jacob.blankbookandroidclient.managers.PostListManager;
+import com.example.jacob.blankbookandroidclient.managers.PublicGroupsManager;
 import com.example.jacob.blankbookandroidclient.managers.VoteManager;
+import com.example.jacob.blankbookandroidclient.utils.Encryption;
 import com.example.jacob.blankbookandroidclient.utils.SimpleCallback;
 
 import java.security.Security;
@@ -382,12 +388,34 @@ public class MainActivity extends AppCompatActivity {
         dialogFragment.show(getFragmentManager(), "tag");
     }
 
-    private void addPost(String title, String content, String groupName) {
-        Post newPost = new Post();
-        newPost.Title = title;
-        newPost.Content = content;
-        newPost.GroupName = groupName;
-        addPost(newPost);
+    private void addPost(final String title, final String content, final String groupName) {
+        final Post newPost = new Post();
+        if (localGroupsManager.isGroupProtected(groupName)) {
+            PublicGroupsManager.getGroup(groupName, new PublicGroupsManager.OnGroupRetrieval() {
+                @Override
+                public void onRetrieval(Group group) {
+                    try {
+                        // TODO: Need to have a way of verifying that the correct password was entered before creating new posts
+                        newPost.Title = GroupPasswordManager.getInstance().encryptString(group.Name, group.Salt, title);
+                        newPost.Content = GroupPasswordManager.getInstance().encryptString(group.Name, group.Salt, content);
+                        newPost.GroupName = groupName;
+                        addPost(newPost);
+                    } catch (Exception e) {
+                        Toast.makeText(getApplicationContext(), getResources().getString(R.string.error_creating_post), Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure() {
+
+                }
+            });
+        } else {
+            newPost.Title = title;
+            newPost.Content = content;
+            newPost.GroupName = groupName;
+            addPost(newPost);
+        }
     }
 
 
@@ -400,12 +428,19 @@ public class MainActivity extends AppCompatActivity {
                         if (response.code() == 200) {
                             refreshPostList();
                         } else {
+                            Log.e("Log", "Response message is " + response.body());
+                            try {
+                                Log.e("Log", "Response is " + response.errorBody().string());
+                            } catch (Exception e ) {
+
+                            }
                             onPostAddFailure(post);
                         }
                     }
 
                     @Override
                     public void onFailure(Call<IDWrapper> call, Throwable t) {
+                        Log.e("Log", t.toString());
                         onPostAddFailure(post);
                     }
                 });
@@ -440,7 +475,7 @@ public class MainActivity extends AppCompatActivity {
         onMainFeed = true;
         menuOptionRemoveHide();
         deleteCallback = null;
-        selectedGroups = new HashSet<>(LocalGroupsManger.getInstance().getGroups());
+        selectedGroups = new HashSet<>(LocalGroupsManger.getInstance().getGroupNames());
         setActivityTitle(getResources().getString(R.string.main_feed));
         drawerAdapter.highlightMainFeed();
         refreshPostList();
@@ -467,7 +502,69 @@ public class MainActivity extends AppCompatActivity {
         selectGroup(group, true);
     }
 
-    private void selectGroup(final String group, boolean refreshList) {
+    private void updateGroupPassword(final Group group) {
+        LayoutInflater li = LayoutInflater.from(getApplicationContext());
+        View promptsView = li.inflate(R.layout.password_prompt, null);
+
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getApplicationContext());
+
+        final EditText userInput = promptsView.findViewById(R.id.password);
+
+        // set prompts.xml to alertdialog builder
+        alertDialogBuilder.setView(promptsView);
+
+        alertDialogBuilder
+                .setCancelable(false)
+                .setPositiveButton("OK",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog,int id) {
+                                String p = userInput.getText().toString();
+                                System.out.println("password inputted is " + p);
+                                if (GroupPasswordManager.getInstance().passwordCorrect(p, group)) {
+                                    System.out.println("password good");
+                                    Toast.makeText(getApplicationContext(), "pass good", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    System.out.println("pass bad");
+                                    Toast.makeText(getApplicationContext(), "pass bad", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        })
+                .setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog,int id) {
+                                dialog.cancel();
+                            }
+                        });
+
+        // create alert dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+
+        // show it
+        alertDialog.show();
+    }
+
+    private void selectGroup(final String group, final boolean refreshList) {
+        if (localGroupsManager.isGroupProtected(group) && !GroupPasswordManager.getInstance().hasPassword(group)) {
+            PublicGroupsManager.getGroup(group, new PublicGroupsManager.OnGroupRetrieval() {
+                @Override
+                public void onRetrieval(Group groupObj) {
+                    System.out.println("group test hash is " + groupObj.PasswordTestHash);
+                    Toast.makeText(getApplicationContext(), " got group", Toast.LENGTH_SHORT).show();
+                    updateGroupPassword(groupObj);
+                    selectGroupAfterPassword(group, refreshList);
+                }
+
+                @Override
+                public void onFailure() {
+                    Toast.makeText(getApplicationContext(), "failed to get group", Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            selectGroupAfterPassword(group, refreshList);
+        }
+    }
+
+    private void selectGroupAfterPassword(final String group, boolean refreshList) {
         onMainFeed = false;
         menuOptionRemoveShow();
         deleteCallback = new SimpleCallback() {
@@ -571,7 +668,7 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                LocalGroupsManger.getInstance().addGroup(targetGroup.Name);
+                LocalGroupsManger.getInstance().addGroup(targetGroup);
                 drawerAdapter.highlightGroup(targetGroup.Name);
                 setFabToPost();
             }

@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.util.Base64;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,7 +24,9 @@ import android.widget.Toast;
 import com.example.jacob.blankbookandroidclient.animations.HeightAnimation;
 import com.example.jacob.blankbookandroidclient.api.RetrofitClient;
 import com.example.jacob.blankbookandroidclient.api.models.Group;
+import com.example.jacob.blankbookandroidclient.managers.GroupPasswordManager;
 import com.example.jacob.blankbookandroidclient.managers.LocalGroupsManger;
+import com.example.jacob.blankbookandroidclient.utils.Encryption;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -180,17 +183,34 @@ public class GroupCreationActivity extends AppCompatActivity {
     }
 
     private void save() {
-        if (!password.getText().toString().equals(passwordConfirmation.getText().toString())) {
+        String passwordText = password.getText().toString();
+        if (!passwordText.equals(passwordConfirmation.getText().toString())) {
             passwordConfirmationError.setText(getResources().getString(R.string.passwords_no_match_error));
             return;
         }
+        String salt = "";
+        String passwordTestHash = "";
+        if (passwordProtected.isChecked()) {
+            try {
+                salt = Base64.encodeToString(Encryption.generateSalt(), Base64.DEFAULT);
+                try {
+                    passwordTestHash = GroupPasswordManager.getInstance().getTestHash(passwordText, salt);
+                } catch (Exception e) {
+                    passwordConfirmationError.setText(getResources().getString(R.string.encryption_error));
+                    return;
+                }
+            } catch (Exception e) {
+                salt = name.getText().toString();
+            }
+        }
+        final Group group = new Group(name.getText().toString(), passwordProtected.isChecked(), passwordTestHash, salt);
         RetrofitClient.getInstance().getBlankBookAPI()
-                .postGroup(new Group(name.getText().toString(), passwordProtected.isChecked()))
+                .postGroup(group)
                 .enqueue(new Callback<Void>() {
                     @Override
                     public void onResponse(Call<Void> call, Response<Void> response) {
                         if (response.code() == 200) {
-                            onGroupCreation();
+                            onGroupCreation(group);
                         } else {
                             showGroupCreationError();
                             errorCheckName();
@@ -211,9 +231,9 @@ public class GroupCreationActivity extends AppCompatActivity {
                 Toast.LENGTH_SHORT).show();
     }
 
-    private void onGroupCreation() {
+    private void onGroupCreation(Group group) {
         String groupName = name.getText().toString();
-        LocalGroupsManger.getInstance().addGroup(groupName);
+        LocalGroupsManger.getInstance().addGroup(group);
         Intent resultIntent = new Intent();
         resultIntent.putExtra(MainActivity.NEW_GROUP_NAME_TAG, groupName);
         setResult(Activity.RESULT_OK, resultIntent);

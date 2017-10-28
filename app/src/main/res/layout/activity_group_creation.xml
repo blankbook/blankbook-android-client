@@ -56,6 +56,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/lg_margin"
             android:layout_marginStart="@dimen/lg_margin"
+            android:fontFamily="sans-serif"
             android:hint="@string/password"
             android:inputType="textPassword"
             android:textSize="@dimen/lg_font" />
@@ -66,6 +67,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/lg_margin"
             android:layout_marginStart="@dimen/lg_margin"
+            android:fontFamily="sans-serif"
             android:paddingEnd="@dimen/sm_margin"
             android:paddingStart="@dimen/sm_margin"
             android:textColor="@color/red"
