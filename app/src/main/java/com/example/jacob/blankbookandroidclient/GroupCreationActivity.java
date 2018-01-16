@@ -183,7 +183,7 @@ public class GroupCreationActivity extends AppCompatActivity {
     }
 
     private void save() {
-        String passwordText = password.getText().toString();
+        final String passwordText = password.getText().toString();
         if (!passwordText.equals(passwordConfirmation.getText().toString())) {
             passwordConfirmationError.setText(getResources().getString(R.string.passwords_no_match_error));
             return;
@@ -210,6 +210,9 @@ public class GroupCreationActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(Call<Void> call, Response<Void> response) {
                         if (response.code() == 200) {
+                            if (group.Protected) {
+                                GroupPasswordManager.getInstance().putPassword(group.Name, passwordText);
+                            }
                             onGroupCreation(group);
                         } else {
                             showGroupCreationError();

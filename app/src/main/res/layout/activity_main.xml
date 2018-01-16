@@ -33,6 +33,20 @@
 
         </android.support.v4.widget.SwipeRefreshLayout>
 
+        <TextView
+            android:id="@+id/no_data_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentStart="true"
+            android:textAlignment="center"
+            android:padding="@dimen/lg_font"
+            android:textSize="@dimen/lg_font"
+            android:layout_marginTop="85dp"
+            android:gravity="center"
+            android:text="No posts found. Search for more groups using the search bar." />
+
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab"
             android:layout_width="wrap_content"

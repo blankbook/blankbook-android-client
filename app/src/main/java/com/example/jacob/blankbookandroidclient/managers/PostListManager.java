@@ -2,9 +2,11 @@ package com.example.jacob.blankbookandroidclient.managers;
 
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.jacob.blankbookandroidclient.api.BlankBookAPI;
 import com.example.jacob.blankbookandroidclient.api.RetrofitClient;
+import com.example.jacob.blankbookandroidclient.api.models.Group;
 import com.example.jacob.blankbookandroidclient.api.models.Post;
 import com.example.jacob.blankbookandroidclient.api.models.RankedPosts;
 
@@ -31,7 +33,7 @@ public class PostListManager {
     public static final String timeString = "time";
     public static final String[] SORT_OPTIONS = {rankString, timeString};
 
-    public enum LoadState { loading, moreAvailable, noMoreAvailable }
+    public enum LoadState {loading, moreAvailable, noMoreAvailable}
 
     public PostListManager() {
         api = RetrofitClient.getInstance().getBlankBookAPI();
@@ -71,9 +73,15 @@ public class PostListManager {
     }
 
     private void getPostList(@NonNull Set<String> groupNames, Long firstRank, Long lastRank,
-                            Long rankVersion, Long firstTime, Long lastTime, final String ordering,
-                            Integer maxCount, @NonNull final OnPostListRetrieval callback) {
+                             Long rankVersion, Long firstTime, Long lastTime, final String ordering,
+                             Integer maxCount, @NonNull final OnPostListRetrieval callback) {
 
+        if (groupNames.size() == 0) {
+            final RankedPosts body = new RankedPosts();
+            body.Posts = new ArrayList<>();
+            callback.onPostListRetrieval(body);
+            return;
+        }
         currentCall = api.getPosts(groupNames, firstRank, lastRank, rankVersion, ordering, firstTime, lastTime, maxCount);
         currentCall.enqueue(new Callback<RankedPosts>() {
             @Override
@@ -81,6 +89,7 @@ public class PostListManager {
                 currentCall = null;
                 final RankedPosts body = response.body();
                 if (body == null) {
+                    Log.e("PostListManager", "got null body when getting posts");
                     callback.onPostListRetrievalFailure();
                 } else {
                     callback.onPostListRetrieval(body);
@@ -94,6 +103,26 @@ public class PostListManager {
                 Log.e("PostListManager", "error getting post list: " + t.getMessage());
             }
         });
+    }
+
+    private class CallbackCounter {
+        private int executingCallbacks = 0;
+
+        CallbackCounter(int executingCallbacks) {
+            this.executingCallbacks = executingCallbacks;
+        }
+
+        public void setExecutingCallbacks(int executingCallbacks) {
+            this.executingCallbacks = executingCallbacks;
+        }
+
+        public void decrimentExecutingCallbacks() {
+            --executingCallbacks;
+        }
+
+        public boolean allCallbacksComplete() {
+            return executingCallbacks == 0;
+        }
     }
 
     public void loadNextPostListChunk(final int size, final OnUpdate onUpdate) {
@@ -114,16 +143,34 @@ public class PostListManager {
         getPostList(lastGroupNames, lowestRank, null, lastRankVersion, oldestTime,
                 null, lastOrdering, size, new OnPostListRetrieval() {
                     @Override
-                    public void onPostListRetrieval(RankedPosts rankedPosts) {
-                        posts.addAll(posts.size(), rankedPosts.Posts);
-                        notifyListeners();
-                        if (onUpdate != null) {
-                            onUpdate.onSuccess();
-                        }
-                        if (rankedPosts.Posts.size() == size) {
-                            setLoadState(LoadState.moreAvailable);
-                        } else {
-                            setLoadState(LoadState.noMoreAvailable);
+                    public void onPostListRetrieval(final RankedPosts rankedPosts) {
+                        final CallbackCounter counter = new CallbackCounter(rankedPosts.Posts.size());
+                        for (Post post : rankedPosts.Posts) {
+                            decryptPost(post, new OnDecryption() {
+                                @Override
+                                public void onDecryption(Post post) {
+                                    counter.decrimentExecutingCallbacks();
+                                    if (counter.allCallbacksComplete()) {
+                                        posts.addAll(posts.size(), rankedPosts.Posts);
+                                        notifyListeners();
+                                        if (onUpdate != null) {
+                                            onUpdate.onSuccess();
+                                        }
+                                        if (rankedPosts.Posts.size() == size) {
+                                            setLoadState(LoadState.moreAvailable);
+                                        } else {
+                                            setLoadState(LoadState.noMoreAvailable);
+                                        }
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure() {
+                                    if (onUpdate != null) {
+                                        onUpdate.onFailure();
+                                    }
+                                }
+                            });
                         }
                     }
 
@@ -138,6 +185,31 @@ public class PostListManager {
                         setLoadState(LoadState.noMoreAvailable);
                     }
                 });
+    }
+
+    private void decryptPost(final Post post, final OnDecryption cb) {
+        PublicGroupsManager.getGroup(post.GroupName, new PublicGroupsManager.OnGroupRetrieval() {
+            @Override
+            public void onRetrieval(Group group) {
+                GroupPasswordManager pm = GroupPasswordManager.getInstance();
+                if (pm.hasPassword(group.Name)) {
+                    try {
+                        Post decrypted = post;
+                        decrypted.Title = pm.decryptString(group, post.Title);
+                        decrypted.Content = pm.decryptString(group, post.Content);
+                    } catch (Exception e) {
+                        cb.onFailure();
+                    }
+                } else {
+                    cb.onFailure();
+                }
+            }
+
+            @Override
+            public void onFailure() {
+                cb.onFailure();
+            }
+        });
     }
 
     public boolean isLoading() {
@@ -239,5 +311,11 @@ public class PostListManager {
         void onPostListRetrieval(RankedPosts rankedPosts);
 
         void onPostListRetrievalFailure();
+    }
+
+    private interface OnDecryption {
+        void onDecryption(Post post);
+
+        void onFailure();
     }
 }

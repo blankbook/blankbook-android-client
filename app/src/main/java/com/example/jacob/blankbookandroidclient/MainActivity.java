@@ -84,6 +84,8 @@ public class MainActivity extends AppCompatActivity {
     RecyclerView drawer;
     @BindView(R.id.post_list)
     RecyclerView postList;
+    @BindView(R.id.no_data_view)
+    View noDataView;
     @BindView(R.id.post_list_refresh)
     SwipeRefreshLayout postListRefresh;
     @BindView(R.id.drawer_wrapper)
@@ -137,6 +139,19 @@ public class MainActivity extends AppCompatActivity {
         setFabToPost();
         setupPostList();
         setupFab();
+
+        postListManager.addListener(new PostListManager.UpdateListener() {
+            @Override
+            public void onUpdate() {
+                if (postListManager.getPostList().size() == 0) {
+                    noDataView.setVisibility(View.VISIBLE);
+                    postList.setVisibility(View.INVISIBLE);
+                } else {
+                    noDataView.setVisibility(View.GONE);
+                    postList.setVisibility(View.VISIBLE);
+                }
+            }
+        });
     }
 
     @Override
@@ -399,6 +414,10 @@ public class MainActivity extends AppCompatActivity {
                         newPost.Title = GroupPasswordManager.getInstance().encryptString(group.Name, group.Salt, title);
                         newPost.Content = GroupPasswordManager.getInstance().encryptString(group.Name, group.Salt, content);
                         newPost.GroupName = groupName;
+                        System.out.println("New post is:");
+                        System.out.println(newPost.Title);
+                        System.out.println(newPost.Content);
+                        System.out.println(newPost.GroupName);
                         addPost(newPost);
                     } catch (Exception e) {
                         Toast.makeText(getApplicationContext(), getResources().getString(R.string.error_creating_post), Toast.LENGTH_SHORT).show();
@@ -407,7 +426,7 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onFailure() {
-
+                    Toast.makeText(getApplicationContext(), getResources().getString(R.string.error_creating_post), Toast.LENGTH_SHORT).show();
                 }
             });
         } else {
@@ -428,11 +447,12 @@ public class MainActivity extends AppCompatActivity {
                         if (response.code() == 200) {
                             refreshPostList();
                         } else {
+                            postListRefresh.setRefreshing(false);
                             Log.e("Log", "Response message is " + response.body());
                             try {
+                                Toast.makeText(getApplicationContext(), "Could not create post: " + response.errorBody().string(), Toast.LENGTH_SHORT).show();
                                 Log.e("Log", "Response is " + response.errorBody().string());
                             } catch (Exception e ) {
-
                             }
                             onPostAddFailure(post);
                         }
@@ -441,6 +461,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onFailure(Call<IDWrapper> call, Throwable t) {
                         Log.e("Log", t.toString());
+                        postListRefresh.setRefreshing(false);
                         onPostAddFailure(post);
                     }
                 });
@@ -506,7 +527,7 @@ public class MainActivity extends AppCompatActivity {
         LayoutInflater li = LayoutInflater.from(getApplicationContext());
         View promptsView = li.inflate(R.layout.password_prompt, null);
 
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(getApplicationContext());
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 
         final EditText userInput = promptsView.findViewById(R.id.password);
 
@@ -523,6 +544,8 @@ public class MainActivity extends AppCompatActivity {
                                 if (GroupPasswordManager.getInstance().passwordCorrect(p, group)) {
                                     System.out.println("password good");
                                     Toast.makeText(getApplicationContext(), "pass good", Toast.LENGTH_SHORT).show();
+                                    GroupPasswordManager.getInstance().putPassword(group.Name, p);
+                                    System.out.println("put password");
                                 } else {
                                     System.out.println("pass bad");
                                     Toast.makeText(getApplicationContext(), "pass bad", Toast.LENGTH_SHORT).show();

@@ -31,10 +31,13 @@ import android.widget.Toast;
 import com.example.jacob.blankbookandroidclient.adapters.CommentListRecyclerViewAdapter;
 import com.example.jacob.blankbookandroidclient.animations.ElevationAnimation;
 import com.example.jacob.blankbookandroidclient.api.RetrofitClient;
+import com.example.jacob.blankbookandroidclient.api.models.Group;
 import com.example.jacob.blankbookandroidclient.api.models.IDWrapper;
 import com.example.jacob.blankbookandroidclient.api.models.Post;
 import com.example.jacob.blankbookandroidclient.managers.CommentListManager;
 import com.example.jacob.blankbookandroidclient.managers.ContributorIdManager;
+import com.example.jacob.blankbookandroidclient.managers.GroupPasswordManager;
+import com.example.jacob.blankbookandroidclient.managers.PublicGroupsManager;
 import com.example.jacob.blankbookandroidclient.utils.AugmentedComment;
 import com.example.jacob.blankbookandroidclient.viewholders.CommentViewHolder;
 
@@ -238,9 +241,28 @@ public class PostActivity extends AppCompatActivity {
         final CommentDialogFragment dialogFragment = new CommentDialogFragment();
         dialogFragment.setOnResult(new CommentDialogFragment.OnCommentDialogResultListener() {
             @Override
-            public void onAccept(String content) {
-                addComment(parentComment, content);
-                dialogFragment.dismiss();
+            public void onAccept(final String content) {
+                PublicGroupsManager.getGroup(post.GroupName, new PublicGroupsManager.OnGroupRetrieval() {
+                            @Override
+                            public void onRetrieval(Group group) {
+                                if (group.Protected) {
+                                    try {
+                                        String encrypted = GroupPasswordManager.getInstance().encryptString(group.Name, group.Salt, content);
+                                        addComment(parentComment, encrypted);
+                                    } catch (Exception e) {
+                                        Toast.makeText(getApplicationContext(), "Couldn't encrypt comment", Toast.LENGTH_SHORT).show();
+                                    }
+                                } else {
+                                    addComment(parentComment, content);
+                                }
+                                dialogFragment.dismiss();
+                            }
+
+                            @Override
+                            public void onFailure() {
+                                Toast.makeText(getApplicationContext(), "Error connecting to the server", Toast.LENGTH_SHORT).show();
+                            }
+                        });
             }
 
             @Override

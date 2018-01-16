@@ -21,8 +21,12 @@ public class GroupPasswordManager {
         return instance;
     }
 
-    public void putPassword(String password, String group) {
-        passwordsByGroup.put(password, group);
+    public void putPassword(String group, String password) {
+        passwordsByGroup.put(group, password);
+    }
+
+    public String decryptString(Group group, String data) throws GeneralSecurityException {
+        return decryptString(group.Name, group.Salt, data);
     }
 
     public String decryptString(String groupName, String salt, String data) throws GeneralSecurityException {
